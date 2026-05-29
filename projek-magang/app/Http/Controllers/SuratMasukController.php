@@ -342,27 +342,31 @@ public function update(Request $request, $id)
 
     public function show($id)
     {
-        $surat = SuratMasuk::with('divisi', 'riwayatStatus.user')->findOrFail($id);
+        $surat = SuratMasuk::with(['divisi', 'formatFile'])->findOrFail($id);
 
-        if (request()->expectsJson() || request()->ajax()) {
-            return response()->json([
-                'success' => true,
-                'surat' => [
-                    'id' => $surat->id,
-                    'nomor_surat' => $surat->nomor_surat,
-                    'divisi_name' => $surat->divisi->nama_divisi ?? ($surat->nama_divisi ?? 'N/A'),
-                    'divisi_id' => $surat->divisi_id,
-                    'tanggal' => $surat->tanggal ? $surat->tanggal->format('Y-m-d') : '',
-                    'instruksi_disposisi' => $surat->instruksi_disposisi,
-                    'instruksi_tambahan' => $surat->instruksi_tambahan,
-                    'pengirim' => $surat->pengirim,
-                    'format_file_id' => $surat->format_file_id,
-                    'file_path' => $surat->file_path,
-                ]
-            ]);
+        $data = [
+            'success' => true,
+            'surat' => [
+                'id' => $surat->id,
+                'nomor_surat' => $surat->nomor_surat,
+                'tanggal' => $surat->tanggal ? $surat->tanggal->format('d/m/Y') : '-',
+                'pengirim' => $surat->pengirim,
+                'perihal' => $surat->perihal,
+                'divisi_name' => $surat->divisi->nama_divisi ?? $surat->nama_divisi ?? 'N/A',
+                'status' => $surat->status,
+                'status_name' => ucfirst($surat->status),
+                'format_file_id' => $surat->format_file_id,
+                'file_path' => $surat->file_path,
+            ]
+        ];
+
+        // Jika permintaan datang dari AJAX/Fetch (JavaScript), kembalikan JSON
+        if (request()->wantsJson() || request()->ajax()) {
+            return response()->json($data);
         }
 
-        return view('surat_masuk.show', compact('surat'));
+        // Jika diakses langsung lewat URL browser, arahkan kembali ke dashboard
+        return redirect()->route('dashboard')->with('error', 'Silakan gunakan tombol lihat di dalam tabel.');
     }
 
     // ✅ tambahan baru

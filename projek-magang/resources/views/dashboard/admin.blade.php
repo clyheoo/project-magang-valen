@@ -268,7 +268,7 @@
                             </td>
                             <td>
                                 <div class="btn-group btn-group-sm">
-                                    <a href="{{ route('surat-masuk.show', $item->id) }}" class="btn btn-outline-primary" title="Lihat"><i class="fas fa-eye"></i></a>
+                                    <button class="btn btn-outline-primary" onclick="lihatDetailSuratMasuk({{ $item->id }})" title="Lihat"><i class="fas fa-eye"></i></button>
                                     <button class="btn btn-outline-secondary" onclick="editSuratMasuk({{ $item->id }})" title="Edit"><i class="fas fa-edit"></i></button>
                                     <button class="btn btn-outline-danger" onclick="hapusSuratMasuk({{ $item->id }}, event)" title="Hapus"><i class="fas fa-trash"></i></button>
                                 </div>
@@ -1398,5 +1398,80 @@ document.addEventListener('DOMContentLoaded', function() {
     document.getElementById('filterTahunArsip')?.addEventListener('change', () => loadArsip(document.getElementById('searchArsip').value, document.getElementById('filterTahunArsip').value, document.getElementById('filterJenisArsip').value));
     document.getElementById('filterJenisArsip')?.addEventListener('change', () => loadArsip(document.getElementById('searchArsip').value, document.getElementById('filterTahunArsip').value, document.getElementById('filterJenisArsip').value));
 });
+
+// Fungsi untuk menampilkan detail surat masuk di section dalam halaman yang sama
+window.lihatDetailSuratMasuk = function(id) {
+    // Tutup semua section lain
+    document.querySelectorAll('.dashboard-section').forEach(s => s.classList.remove('active'));
+    
+    // Buka section detail surat
+    const detailSection = document.getElementById('suratDetailSection');
+    if (detailSection) {
+        detailSection.classList.add('active');
+        
+        // Set ID surat yang sedang dilihat (untuk keperluan update status)
+        document.getElementById('currentSuratId').value = id;
+    }
+    
+    // Ambil data surat via API
+    fetch(`/api/surat-masuk/${id}`, {
+        headers: { 'Accept': 'application/json' }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (!data || !data.success || !data.surat) {
+            alert('Gagal mengambil data surat');
+            return;
+        }
+        
+        const surat = data.surat;
+        const setText = (id, value) => {
+            const el = document.getElementById(id);
+            if (el) el.textContent = value || '-';
+        };
+        
+        setText('detailNomorSurat', surat.nomor_surat);
+        setText('detailTanggal', surat.tanggal);
+        setText('detailPengirim', surat.pengirim);
+        setText('detailPerihal', surat.perihal);
+        setText('detailDivisi', surat.divisi_name || surat.nama_divisi);
+        setText('detailStatus', surat.status_name || surat.status);
+        setText('detailTanggalRiwayat', surat.tanggal);
+        
+        // Set badge status
+        const badgeEl = document.getElementById('detailStatusBadge');
+        if (badgeEl) {
+            const statusColors = { 'baru': 'warning', 'diterima': 'success', 'ditolak': 'danger', 'diproses': 'info', 'selesai': 'primary' };
+            badgeEl.className = `badge bg-${statusColors[surat.status] || 'secondary'}`;
+            badgeEl.textContent = surat.status_name || surat.status;
+        }
+        
+        // Set file icon dan link
+        const fileIcon = document.getElementById('detailFileIconContainer');
+        const fileLink = document.getElementById('detailFileLink');
+        
+        if (fileIcon) {
+            let iconClass = 'fas fa-file fa-7x text-secondary';
+            if (surat.format_file_id == 1) iconClass = 'fas fa-file-pdf fa-7x text-danger';
+            else if (surat.format_file_id == 2) iconClass = 'fas fa-file-word fa-7x text-primary';
+            else if (surat.format_file_id == 3) iconClass = 'fas fa-file-excel fa-7x text-success';
+            fileIcon.innerHTML = `<i class="${iconClass}"></i>`;
+        }
+        
+        if (fileLink) {
+            if (surat.file_path) {
+                fileLink.href = `${window.location.origin}/storage/${surat.file_path}`;
+                fileLink.style.display = 'inline-block';
+                fileLink.target = '_blank';
+            } else {
+                fileLink.style.display = 'none';
+            }
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('Terjadi kesalahan saat mengambil data surat');
+    });
+};
 </script>
 @endpush

@@ -1235,86 +1235,101 @@
 document.addEventListener('DOMContentLoaded', function() {
     // Toggle department visibility based on role
     function toggleDeptVisibility(roleSelect, deptContainer) {
+        if (!roleSelect || !deptContainer) return;
         deptContainer.style.display = roleSelect.value === 'admin' ? 'none' : 'block';
     }
     
     const penggunaRole = document.getElementById('penggunaRole');
-    const penggunaDept = document.getElementById('penggunaDeptContainer');
-    if (penggunaRole && penggunaDept) {
-        toggleDeptVisibility(penggunaRole, penggunaDept);
-        penggunaRole.addEventListener('change', () => toggleDeptVisibility(penggunaRole, penggunaDept));
-    }
+    if (penggunaRole) penggunaRole.addEventListener('change', () => toggleDeptVisibility(penggunaRole, document.getElementById('penggunaDeptContainer')));
     
     const editRole = document.getElementById('editRole');
-    const editDept = document.getElementById('editDivisiContainer');
-    if (editRole && editDept) {
-        toggleDeptVisibility(editRole, editDept);
-        editRole.addEventListener('change', () => toggleDeptVisibility(editRole, editDept));
-    }
+    if (editRole) editRole.addEventListener('change', () => toggleDeptVisibility(editRole, document.getElementById('editDivisiContainer')));
 
     // Export period toggle
     document.getElementById('exportPeriod')?.addEventListener('change', function() {
         document.getElementById('exportDateRange').style.display = this.value === 'custom' ? 'block' : 'none';
     });
 
-    // Charts initialization
-    const workloadData = @json($workloadData);
-    const workloadStatusCounts = @json($workloadStatusCounts);
-    const reportData = { monthlyTrend: @json($monthlyTrend), divisionDistribution: @json($divisionDistribution) };
+    // ==========================================
+    // 1. CHART DASHBOARD UTAMA (Distribusi & Status)
+    // ==========================================
+    const chartDivisionData = @json($divisionChartData);
+    const chartStatusData = @json($statusChartData);
 
-    if (document.getElementById('workloadAnalysisChart')) {
-        new Chart(document.getElementById('workloadAnalysisChart'), {
+    const ctxDivision = document.getElementById('divisionChart');
+    if (ctxDivision && chartDivisionData) {
+        new Chart(ctxDivision, {
             type: 'bar',
             data: {
-                labels: workloadData.map(d => d.divisi_name),
+                labels: chartDivisionData.map(d => d.name),
                 datasets: [
-                    { label: 'Surat Masuk', data: workloadData.map(d => d.surat_masuk), backgroundColor: 'rgba(52,152,219,0.8)' },
-                    { label: 'Surat Keluar', data: workloadData.map(d => d.surat_keluar), backgroundColor: 'rgba(39,174,96,0.8)' },
-                    { label: 'Belum Ditindak', data: workloadData.map(d => d.belum_ditindak), backgroundColor: 'rgba(243,156,18,0.8)' }
-                ]
-            },
-            options: { responsive: true, maintainAspectRatio: false, scales: { y: { beginAtZero: true, ticks: { stepSize: 1 } } } }
-        });
-    }
-
-    if (document.getElementById('workloadStatusChart')) {
-        new Chart(document.getElementById('workloadStatusChart'), {
-            type: 'doughnut',
-            data: { labels: Object.keys(workloadStatusCounts), datasets: [{ data: Object.values(workloadStatusCounts), backgroundColor: ['#27ae60','#f39c12','#e74c3c'], borderWidth: 2 }] },
-            options: { responsive: true, maintainAspectRatio: false }
-        });
-    }
-
-    if (document.getElementById('monthlyTrendChart')) {
-        new Chart(document.getElementById('monthlyTrendChart'), {
-            type: 'line',
-            data: {
-                labels: reportData.monthlyTrend.labels,
-                datasets: [
-                    { label: 'Surat Masuk', data: reportData.monthlyTrend.surat_masuk, borderColor: '#3498db', backgroundColor: 'rgba(52,152,219,0.1)', fill: true, tension: 0.3 },
-                    { label: 'Surat Keluar', data: reportData.monthlyTrend.surat_keluar, borderColor: '#27ae60', backgroundColor: 'rgba(39,174,96,0.1)', fill: true, tension: 0.3 }
+                    { label: 'Surat Masuk', data: chartDivisionData.map(d => d.surat_masuk), backgroundColor: 'rgba(52, 152, 219, 0.7)', borderColor: 'rgba(52, 152, 219, 1)', borderWidth: 1 },
+                    { label: 'Surat Keluar', data: chartDivisionData.map(d => d.surat_keluar), backgroundColor: 'rgba(39, 174, 96, 0.7)', borderColor: 'rgba(39, 174, 96, 1)', borderWidth: 1 }
                 ]
             },
             options: { responsive: true, maintainAspectRatio: false, scales: { y: { beginAtZero: true } } }
         });
     }
 
-    if (document.getElementById('divisionDistributionChart')) {
-        new Chart(document.getElementById('divisionDistributionChart'), {
-            type: 'pie',
+    const ctxStatus = document.getElementById('statusChart');
+    if (ctxStatus && chartStatusData) {
+        const statusColors = { 'baru': 'rgba(243, 156, 18, 0.7)', 'diterima': 'rgba(39, 174, 96, 0.7)', 'ditolak': 'rgba(231, 76, 60, 0.7)', 'diproses': 'rgba(52, 152, 219, 0.7)', 'selesai': 'rgba(155, 89, 182, 0.7)' };
+        new Chart(ctxStatus, {
+            type: 'doughnut',
             data: {
-                labels: reportData.divisionDistribution.map(d => d.name),
-                datasets: [{ data: reportData.divisionDistribution.map(d => d.total), backgroundColor: ['#3498db','#27ae60','#f39c12','#e74c3c','#9b59b6','#1abc9c'] }]
+                labels: Object.keys(chartStatusData),
+                datasets: [{ data: Object.values(chartStatusData), backgroundColor: Object.keys(chartStatusData).map(k => statusColors[k] || 'rgba(149, 165, 166, 0.7)') }]
             },
             options: { responsive: true, maintainAspectRatio: false }
         });
     }
 
-    // Filter: Surat Masuk
+    // ==========================================
+    // 2. CHART LAPORAN & BEBAN KERJA
+    // ==========================================
+    const workloadData = @json($workloadData);
+    const workloadStatusCounts = @json($workloadStatusCounts);
+    const reportData = { monthlyTrend: @json($monthlyTrend), divisionDistribution: @json($divisionDistribution) };
+
+    if (document.getElementById('workloadAnalysisChart')) {
+        new Chart(document.getElementById('workloadAnalysisChart'), {
+            type: 'bar', data: { labels: workloadData.map(d => d.divisi_name), datasets: [
+                { label: 'Surat Masuk', data: workloadData.map(d => d.surat_masuk), backgroundColor: 'rgba(52,152,219,0.8)' },
+                { label: 'Surat Keluar', data: workloadData.map(d => d.surat_keluar), backgroundColor: 'rgba(39,174,96,0.8)' },
+                { label: 'Belum Ditindak', data: workloadData.map(d => d.belum_ditindak), backgroundColor: 'rgba(243,156,18,0.8)' }
+            ]}, options: { responsive: true, maintainAspectRatio: false, scales: { y: { beginAtZero: true, ticks: { stepSize: 1 } } } }
+        });
+    }
+
+    if (document.getElementById('workloadStatusChart')) {
+        new Chart(document.getElementById('workloadStatusChart'), {
+            type: 'doughnut', data: { labels: Object.keys(workloadStatusCounts), datasets: [{ data: Object.values(workloadStatusCounts), backgroundColor: ['#27ae60','#f39c12','#e74c3c'], borderWidth: 2 }] },
+            options: { responsive: true, maintainAspectRatio: false }
+        });
+    }
+
+    if (document.getElementById('monthlyTrendChart')) {
+        new Chart(document.getElementById('monthlyTrendChart'), {
+            type: 'line', data: { labels: reportData.monthlyTrend.labels, datasets: [
+                { label: 'Surat Masuk', data: reportData.monthlyTrend.surat_masuk, borderColor: '#3498db', backgroundColor: 'rgba(52,152,219,0.1)', fill: true, tension: 0.3 },
+                { label: 'Surat Keluar', data: reportData.monthlyTrend.surat_keluar, borderColor: '#27ae60', backgroundColor: 'rgba(39,174,96,0.1)', fill: true, tension: 0.3 }
+            ]}, options: { responsive: true, maintainAspectRatio: false, scales: { y: { beginAtZero: true } } }
+        });
+    }
+
+    if (document.getElementById('divisionDistributionChart')) {
+        new Chart(document.getElementById('divisionDistributionChart'), {
+            type: 'pie', data: { labels: reportData.divisionDistribution.map(d => d.name), datasets: [{ data: reportData.divisionDistribution.map(d => d.total), backgroundColor: ['#3498db','#27ae60','#f39c12','#e74c3c','#9b59b6','#1abc9c'] }] },
+            options: { responsive: true, maintainAspectRatio: false }
+        });
+    }
+
+    // ==========================================
+    // 3. FILTER FUNCTIONS
+    // ==========================================
     function loadSuratMasuk(search, divisi, status) {
         fetch(`{{ route('surat-masuk.index') }}?search=${encodeURIComponent(search||'')}&divisi=${encodeURIComponent(divisi||'')}&status=${encodeURIComponent(status||'')}`, { headers: { 'X-Requested-With': 'XMLHttpRequest', 'Accept': 'application/json' } })
-        .then(r => r.json())
-        .then(data => {
+        .then(r => r.json()).then(data => {
             const tbody = document.getElementById('suratMasukTableBody');
             if (!tbody || !data.success) return;
             tbody.innerHTML = '';
@@ -1325,13 +1340,9 @@ document.addEventListener('DOMContentLoaded', function() {
                     const divisiNama = item.divisi?.nama_divisi || item.nama_divisi || 'N/A';
                     const icon = getFileIconClass(item.format_file_id, 'fa-lg', item.format_file?.nama_format || '');
                     const statuses = { baru: 'warning', diterima: 'success', ditolak: 'danger', diproses: 'info', selesai: 'primary' };
-                    const badge = `<span class="badge bg-${statuses[item.status] || 'secondary'}">${item.status}</span>`;
-                    
-                    tbody.innerHTML += `<tr data-id="${item.id}"><th>${no++}</th><td>${tanggal}</td><td>${item.pengirim||'N/A'}</td><td class="text-truncate" style="max-width:150px" title="${item.instruksi_disposisi||''}">${item.instruksi_disposisi||'-'}</td><td class="text-truncate" style="max-width:150px" title="${item.instruksi_tambahan||''}">${item.instruksi_tambahan||'-'}</td><td><span class="divisi-tag divisi-${item.divisi_id||0}">${divisiNama}</span></td><td><i class="${icon}"></i></td><td>${badge}</td><td><div class="btn-group btn-group-sm"><a href="/surat-masuk/${item.id}" class="btn btn-outline-primary"><i class="fas fa-eye"></i></a><button class="btn btn-outline-secondary" onclick="editSuratMasuk(${item.id})"><i class="fas fa-edit"></i></button><button class="btn btn-outline-danger" onclick="hapusSuratMasuk(${item.id},event)"><i class="fas fa-trash"></i></button></div></td></tr>`;
+                    tbody.innerHTML += `<tr data-id="${item.id}"><th>${no++}</th><td>${tanggal}</td><td>${item.pengirim||'N/A'}</td><td class="text-truncate" style="max-width:150px" title="${item.instruksi_disposisi||''}">${item.instruksi_disposisi||'-'}</td><td class="text-truncate" style="max-width:150px" title="${item.instruksi_tambahan||''}">${item.instruksi_tambahan||'-'}</td><td><span class="divisi-tag divisi-${item.divisi_id||0}">${divisiNama}</span></td><td><i class="${icon}"></i></td><td><span class="badge bg-${statuses[item.status]||'secondary'}">${item.status}</span></td><td><div class="btn-group btn-group-sm"><button class="btn btn-outline-primary" onclick="lihatDetailSuratMasuk(${item.id})"><i class="fas fa-eye"></i></button><button class="btn btn-outline-secondary" onclick="editSuratMasuk(${item.id})"><i class="fas fa-edit"></i></button><button class="btn btn-outline-danger" onclick="hapusSuratMasuk(${item.id},event)"><i class="fas fa-trash"></i></button></div></td></tr>`;
                 });
-            } else {
-                tbody.innerHTML = '<tr><td colspan="9" class="text-center">Tidak ada data.</td></tr>';
-            }
+            } else { tbody.innerHTML = '<tr><td colspan="9" class="text-center">Tidak ada data.</td></tr>'; }
         }).catch(() => { document.getElementById('suratMasukTableBody').innerHTML = '<tr><td colspan="9" class="text-center text-danger">Gagal memuat data.</td></tr>'; });
     }
 
@@ -1340,116 +1351,99 @@ document.addEventListener('DOMContentLoaded', function() {
     document.getElementById('filterDivisi')?.addEventListener('change', () => loadSuratMasuk(document.getElementById('searchSuratMasuk').value, document.getElementById('filterDivisi').value, document.getElementById('filterStatus').value));
     document.getElementById('filterStatus')?.addEventListener('change', () => loadSuratMasuk(document.getElementById('searchSuratMasuk').value, document.getElementById('filterDivisi').value, document.getElementById('filterStatus').value));
 
-    // Filter: Surat Keluar
+    // Filter Surat Keluar & Arsip (Sama seperti sebelumnya, pastikan ada di sini)
     function loadSuratKeluar(search, divisi, status) {
         fetch(`{{ route('surat-keluar.index') }}?search=${encodeURIComponent(search||'')}&divisi=${encodeURIComponent(divisi||'')}&status=${encodeURIComponent(status||'')}`, { headers: { 'X-Requested-With': 'XMLHttpRequest', 'Accept': 'application/json' } })
-        .then(r => r.json())
-        .then(data => {
-            const list = document.getElementById('suratKeluarList');
-            if (!list || !data.success) return;
-            list.innerHTML = '';
+        .then(r => r.json()).then(data => {
+            const list = document.getElementById('suratKeluarList'); if (!list || !data.success) return; list.innerHTML = '';
             if (data.suratKeluar.length) {
                 data.suratKeluar.forEach(item => {
-                    const divisiNama = item.divisi?.nama_divisi || 'N/A';
-                    const preview = (item.perihal || '').substring(0, 100);
-                    const statuses = { draft: 'bg-draft', dikirim: 'bg-dikirim', diterima: 'bg-diterima' };
-                    const badge = `<span class="badge ${statuses[item.status] || 'bg-secondary'}">${item.status}</span>`;
-                    
-                    list.innerHTML += `<div class="list-group-item email-item" data-id="${item.id}"><div class="d-flex w-100 align-items-center"><div class="flex-grow-1"><div class="d-flex w-100 justify-content-between"><h6 class="mb-1 email-subject">${item.penerima||'N/A'}</h6><small class="text-muted">${item.tanggal_kirim||''}</small></div><p class="mb-1 email-preview">${preview}</p><div class="email-meta mt-2"><span class="badge bg-light text-dark me-2">${divisiNama}</span>${badge}</div></div><div class="ms-3"><div class="btn-group btn-group-sm"><a href="/surat-keluar/${item.id}" class="btn btn-outline-primary"><i class="fas fa-eye"></i></a><button class="btn btn-outline-secondary" onclick="editSuratKeluar(${item.id})"><i class="fas fa-edit"></i></button><button class="btn btn-outline-danger" onclick="hapusSuratKeluar(${item.id},event)"><i class="fas fa-trash"></i></button></div></div></div></div>`;
+                    const badge = `<span class="badge bg-${item.status === 'draft' ? 'draft' : (item.status === 'dikirim' ? 'dikirim' : 'diterima')}">${item.status}</span>`;
+                    list.innerHTML += `<div class="list-group-item email-item"><div class="d-flex w-100 align-items-center"><div class="flex-grow-1"><div class="d-flex w-100 justify-content-between"><h6 class="mb-1 email-subject">${item.penerima||'N/A'}</h6><small class="text-muted">${item.tanggal_kirim||''}</small></div><p class="mb-1 email-preview">${(item.perihal||'').substring(0,100)}</p><div class="email-meta mt-2"><span class="badge bg-light text-dark me-2">${item.divisi?.nama_divisi||'N/A'}</span>${badge}</div></div><div class="ms-3"><div class="btn-group btn-group-sm"><a href="/surat-keluar/${item.id}" class="btn btn-outline-primary"><i class="fas fa-eye"></i></a><button class="btn btn-outline-secondary" onclick="editSuratKeluar(${item.id})"><i class="fas fa-edit"></i></button><button class="btn btn-outline-danger" onclick="hapusSuratKeluar(${item.id},event)"><i class="fas fa-trash"></i></button></div></div></div></div>`;
                 });
-            } else {
-                list.innerHTML = '<div class="list-group-item text-center p-5">Tidak ada data.</div>';
-            }
+            } else { list.innerHTML = '<div class="list-group-item text-center p-5">Tidak ada data.</div>'; }
         });
     }
-
     document.getElementById('searchSuratKeluar')?.addEventListener('keyup', () => loadSuratKeluar(document.getElementById('searchSuratKeluar').value, document.getElementById('filterDivisiKeluar')?.value, document.getElementById('filterStatusKeluar')?.value));
     document.getElementById('filterDivisiKeluar')?.addEventListener('change', () => loadSuratKeluar(document.getElementById('searchSuratKeluar').value, document.getElementById('filterDivisiKeluar').value, document.getElementById('filterStatusKeluar')?.value));
-    document.getElementById('filterStatusKeluar')?.addEventListener('change', () => loadSuratKeluar(document.getElementById('searchSuratKeluar').value, document.getElementById('filterDivisiKeluar').value, document.getElementById('filterStatusKeluar')?.value));
+    document.getElementById('filterStatusKeluar')?.addEventListener('change', () => loadSuratKeluar(document.getElementById('searchSuratKeluar').value, document.getElementById('filterDivisiKeluar')?.value, document.getElementById('filterStatusKeluar')?.value));
 
-    // Filter: Arsip
     function loadArsip(search, tahun, jenis) {
         fetch(`{{ route('arsip.index') }}?searchArsip=${encodeURIComponent(search||'')}&filterTahunArsip=${encodeURIComponent(tahun||'')}&filterJenisArsip=${encodeURIComponent(jenis||'')}`, { headers: { 'X-Requested-With': 'XMLHttpRequest', 'Accept': 'application/json' } })
-        .then(r => r.json())
-        .then(data => {
-            const tbody = document.getElementById('arsipTableBody');
-            if (!tbody) return;
-            tbody.innerHTML = '';
+        .then(r => r.json()).then(data => {
+            const tbody = document.getElementById('arsipTableBody'); if (!tbody) return; tbody.innerHTML = '';
             const items = data.arsip?.data || data.arsip || data.data || data;
             if (Array.isArray(items) && items.length) {
                 let no = 1;
                 items.forEach(item => {
-                    const formatId = item.format_id || item.format_file_id;
-                    const formatName = item.format || item.format_file?.nama_format || '';
-                    const icon = getFileIconClass(formatId, 'fa-lg', formatName);
-                    const isPdf = formatId == 1 || formatName.toLowerCase().includes('pdf');
+                    const isPdf = (item.format_id == 1) || ((item.format||'').toLowerCase().includes('pdf'));
                     const fileActions = item.file_path ? `<div class="btn-group btn-group-sm"><a href="{{ asset('storage') }}/${item.file_path}" target="_blank" class="btn btn-outline-primary ${!isPdf?'disabled':''}"><i class="fas fa-eye"></i></a><a href="{{ asset('storage') }}/${item.file_path}" download class="btn btn-outline-secondary"><i class="fas fa-download"></i></a></div>` : '<span class="text-muted">No file</span>';
-                    
-                    tbody.innerHTML += `<tr><th>${no++}</th><td>${item.nomor_surat||'-'}</td><td>${item.tanggal||'-'}</td><td>${item.perihal||'-'}</td><td class="text-truncate" style="max-width:150px" title="${item.keterangan||''}">${item.keterangan||'-'}</td><td><span class="badge bg-${item.jenis_color||'secondary'}">${item.jenis||'-'}</span></td><td><i class="${icon}"></i></td><td>${item.ukuran||'-'}</td><td>${fileActions}</td></tr>`;
+                    tbody.innerHTML += `<tr><th>${no++}</th><td>${item.nomor_surat||'-'}</td><td>${item.tanggal||'-'}</td><td>${item.perihal||'-'}</td><td class="text-truncate" style="max-width:150px">${item.keterangan||'-'}</td><td><span class="badge bg-${item.jenis_color||'secondary'}">${item.jenis||'-'}</span></td><td><i class="${getFileIconClass(item.format_id, 'fa-lg', item.format||'')}"></i></td><td>${item.ukuran||'-'}</td><td>${fileActions}</td></tr>`;
                 });
-            } else {
-                tbody.innerHTML = '<tr><td colspan="9" class="text-center">Tidak ada data.</td></tr>';
-            }
+            } else { tbody.innerHTML = '<tr><td colspan="9" class="text-center">Tidak ada data.</td></tr>'; }
         });
     }
-
     document.getElementById('btnSearchArsip')?.addEventListener('click', () => loadArsip(document.getElementById('searchArsip').value, document.getElementById('filterTahunArsip').value, document.getElementById('filterJenisArsip').value));
     document.getElementById('searchArsip')?.addEventListener('keyup', e => { if (e.key === 'Enter') loadArsip(e.target.value, document.getElementById('filterTahunArsip').value, document.getElementById('filterJenisArsip').value); });
     document.getElementById('filterTahunArsip')?.addEventListener('change', () => loadArsip(document.getElementById('searchArsip').value, document.getElementById('filterTahunArsip').value, document.getElementById('filterJenisArsip').value));
     document.getElementById('filterJenisArsip')?.addEventListener('change', () => loadArsip(document.getElementById('searchArsip').value, document.getElementById('filterTahunArsip').value, document.getElementById('filterJenisArsip').value));
 });
 
-// Fungsi untuk menampilkan detail surat masuk di section dalam halaman yang sama
-window.lihatDetailSuratMasuk = function(id) {
-    // Tutup semua section lain
-    document.querySelectorAll('.dashboard-section').forEach(s => s.classList.remove('active'));
-    
-    // Buka section detail surat
-    const detailSection = document.getElementById('suratDetailSection');
-    if (detailSection) {
-        detailSection.classList.add('active');
-        
-        // Set ID surat yang sedang dilihat (untuk keperluan update status)
-        document.getElementById('currentSuratId').value = id;
-    }
-    
-    // Ambil data surat via API
-    fetch(`/api/surat-masuk/${id}`, {
-        headers: { 'Accept': 'application/json' }
+// ==========================================
+// FUNGSI GLOBAL
+// ==========================================
+
+// Fungsi Update Status
+window.updateStatus = function(status, suratId) {
+    if (!suratId) return;
+    fetch(`/surat-masuk/${suratId}/update-status`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content'), 'Accept': 'application/json' },
+        body: JSON.stringify({ id: suratId, status: status })
     })
     .then(response => response.json())
     .then(data => {
-        if (!data || !data.success || !data.surat) {
-            alert('Gagal mengambil data surat');
-            return;
+        if (data.success) {
+            showSuccessModal('Status berhasil diperbarui menjadi ' + status);
+            setTimeout(() => lihatDetailSuratMasuk(suratId), 1000); // Refresh detail untuk muat riwayat baru
+        } else {
+            alert('Gagal mengupdate status: ' + (data.message || 'Terjadi kesalahan'));
         }
+    }).catch(error => { console.error('Error:', error); alert('Terjadi kesalahan saat mengupdate status'); });
+};
+
+// Fungsi Lihat Detail Surat Masuk (Sekarang termasuk Riwayat Proses)
+window.lihatDetailSuratMasuk = function(id) {
+    document.querySelectorAll('.dashboard-section').forEach(s => s.classList.remove('active'));
+    const detailSection = document.getElementById('suratDetailSection');
+    if (detailSection) {
+        detailSection.classList.add('active');
+        document.getElementById('currentSuratId').value = id;
+    }
+    
+    fetch(`/api/surat-masuk/${id}`, { headers: { 'Accept': 'application/json' } })
+    .then(response => response.json())
+    .then(data => {
+        if (!data || !data.success || !data.surat) { alert('Gagal mengambil data surat'); return; }
         
         const surat = data.surat;
-        const setText = (id, value) => {
-            const el = document.getElementById(id);
-            if (el) el.textContent = value || '-';
-        };
+        const setText = (elId, value) => { const el = document.getElementById(elId); if (el) el.textContent = value || '-'; };
         
         setText('detailNomorSurat', surat.nomor_surat);
         setText('detailTanggal', surat.tanggal);
         setText('detailPengirim', surat.pengirim);
         setText('detailPerihal', surat.perihal);
-        setText('detailDivisi', surat.divisi_name || surat.nama_divisi);
-        setText('detailStatus', surat.status_name || surat.status);
-        setText('detailTanggalRiwayat', surat.tanggal);
+        setText('detailDivisi', surat.divisi_name);
+        setText('detailStatus', surat.status_name);
         
-        // Set badge status
         const badgeEl = document.getElementById('detailStatusBadge');
         if (badgeEl) {
             const statusColors = { 'baru': 'warning', 'diterima': 'success', 'ditolak': 'danger', 'diproses': 'info', 'selesai': 'primary' };
             badgeEl.className = `badge bg-${statusColors[surat.status] || 'secondary'}`;
-            badgeEl.textContent = surat.status_name || surat.status;
+            badgeEl.textContent = surat.status_name;
         }
         
-        // Set file icon dan link
         const fileIcon = document.getElementById('detailFileIconContainer');
-        const fileLink = document.getElementById('detailFileLink');
-        
         if (fileIcon) {
             let iconClass = 'fas fa-file fa-7x text-secondary';
             if (surat.format_file_id == 1) iconClass = 'fas fa-file-pdf fa-7x text-danger';
@@ -1458,20 +1452,35 @@ window.lihatDetailSuratMasuk = function(id) {
             fileIcon.innerHTML = `<i class="${iconClass}"></i>`;
         }
         
+        const fileLink = document.getElementById('detailFileLink');
         if (fileLink) {
-            if (surat.file_path) {
-                fileLink.href = `${window.location.origin}/storage/${surat.file_path}`;
-                fileLink.style.display = 'inline-block';
-                fileLink.target = '_blank';
+            if (surat.file_path) { fileLink.href = `${window.location.origin}/storage/${surat.file_path}`; fileLink.style.display = 'inline-block'; fileLink.target = '_blank'; }
+            else { fileLink.style.display = 'none'; }
+        }
+
+        // TAMBAHKAN: Render Riwayat Proses secara Dinamis
+        const timelineContainer = detailSection.querySelector('.timeline');
+        if (timelineContainer && data.riwayat) {
+            timelineContainer.innerHTML = ''; // Kosongkan riwayat lama (hardcoded)
+            
+            if (data.riwayat.length > 0) {
+                data.riwayat.forEach(riw => {
+                    const statusColors = { 'Baru': 'warning', 'Diterima': 'success', 'Ditolak': 'danger', 'Diproses': 'info', 'Selesai': 'primary' };
+                    timelineContainer.innerHTML += `
+                        <li class="timeline-item">
+                            <div class="timeline-marker" style="background-color: var(--${statusColors[riw.status_name] || 'secondary'})"></div>
+                            <div class="timeline-content">
+                                <h6 class="timeline-title">${riw.status_name}</h6>
+                                <p class="timeline-text">${riw.keterangan}</p>
+                                <small class="text-muted d-block">Oleh: ${riw.user_name} • ${riw.tanggal}</small>
+                            </div>
+                        </li>`;
+                });
             } else {
-                fileLink.style.display = 'none';
+                timelineContainer.innerHTML = '<li class="timeline-item"><div class="timeline-marker"></div><div class="timeline-content"><p class="text-muted">Belum ada riwayat proses.</p></div></li>';
             }
         }
-    })
-    .catch(error => {
-        console.error('Error:', error);
-        alert('Terjadi kesalahan saat mengambil data surat');
-    });
+    }).catch(error => { console.error('Error:', error); alert('Terjadi kesalahan saat mengambil data surat'); });
 };
 </script>
 @endpush

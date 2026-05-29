@@ -342,7 +342,7 @@ public function update(Request $request, $id)
 
     public function show($id)
     {
-        $surat = SuratMasuk::with(['divisi', 'formatFile'])->findOrFail($id);
+        $surat = SuratMasuk::with(['divisi', 'formatFile', 'riwayatStatus.user'])->findOrFail($id);
 
         $data = [
             'success' => true,
@@ -357,15 +357,21 @@ public function update(Request $request, $id)
                 'status_name' => ucfirst($surat->status),
                 'format_file_id' => $surat->format_file_id,
                 'file_path' => $surat->file_path,
-            ]
+            ],
+            'riwayat' => $surat->riwayatStatus->map(function ($item) {
+                return [
+                    'status_name' => ucfirst($item->status),
+                    'tanggal' => $item->tanggal->format('d/m/Y H:i'),
+                    'keterangan' => $item->keterangan,
+                    'user_name' => $item->user->name ?? 'Sistem'
+                ];
+            })
         ];
 
-        // Jika permintaan datang dari AJAX/Fetch (JavaScript), kembalikan JSON
         if (request()->wantsJson() || request()->ajax()) {
             return response()->json($data);
         }
 
-        // Jika diakses langsung lewat URL browser, arahkan kembali ke dashboard
         return redirect()->route('dashboard')->with('error', 'Silakan gunakan tombol lihat di dalam tabel.');
     }
 

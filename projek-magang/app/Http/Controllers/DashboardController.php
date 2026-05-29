@@ -166,6 +166,18 @@ class DashboardController extends Controller
             ]);
             $recentActivities = $recentMasuk->concat($recentKeluar)->sortByDesc('date')->take(5);
 
+            // Data untuk Chart Dashboard Utama
+            $divisionChartData = Divisi::withCount(['suratMasuk', 'suratKeluar'])->get()->map(fn($d) => [
+                'name' => $d->nama_divisi,
+                'surat_masuk' => $d->surat_masuk_count,
+                'surat_keluar' => $d->surat_keluar_count
+            ]);
+
+            $statusChartData = SuratMasuk::select('status', \DB::raw('count(*) as total'))
+                ->groupBy('status')
+                ->pluck('total', 'status')
+                ->toArray();
+
             // Return view ADMIN
             return view('dashboard.admin', compact(
                 'recentActivities', 'suratMasukHariIni', 'suratKeluarHariIni', 'belumDitindakSidebarCount',
@@ -174,7 +186,7 @@ class DashboardController extends Controller
                 'belumDitindakCount', 'totalSuratMasuk', 'totalSuratKeluar', 'pdfCount', 'wordCount', 'excelCount',
                 'suratMasuk', 'suratKeluar', 'arsip', 'users', 'workloadData', 'workloadStatusCounts',
                 'efisiensiProses', 'avgProcessingTime', 'onTimePercentage', 'mostActiveDivision', 'totalFilesProcessed',
-                'divisi', 'monthlyTrend', 'divisionDistribution', 'totalLaporan'
+                'divisi', 'monthlyTrend', 'divisionDistribution', 'totalLaporan', 'divisionChartData','statusChartData' 
             ));
         }
 

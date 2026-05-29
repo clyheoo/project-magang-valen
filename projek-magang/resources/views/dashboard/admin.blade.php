@@ -621,17 +621,21 @@
             </div>
             
             <div class="d-flex justify-content-end mt-4">
-                <div class="btn-group">
-                    <button type="button" class="btn btn-success dropdown-toggle" data-bs-toggle="dropdown">
-                        <i class="fas fa-tasks me-2"></i>Update Status
+            <div class="mt-4 p-3 border rounded bg-light" id="updateStatusContainer">
+                <label class="form-label fw-bold">Update Status</label>
+                <div class="d-flex gap-2 mb-3">
+                    <select class="form-select form-select-sm" id="newStatusSelect" style="width: auto;">
+                        <option value="diterima">Diterima</option>
+                        <option value="ditolak">Ditolak</option>
+                        <option value="diproses">Diproses</option>
+                        <option value="selesai">Selesai</option>
+                    </select>
+                    <button type="button" class="btn btn-primary btn-sm" onclick="updateStatus()">
+                        <i class="fas fa-save me-1"></i> Simpan
                     </button>
-                    <ul class="dropdown-menu">
-                        <li><a class="dropdown-item" href="#" onclick="event.preventDefault(); updateStatus('diterima', document.getElementById('currentSuratId').value)"><i class="fas fa-check-circle me-2 text-success"></i>Terima</a></li>
-                        <li><a class="dropdown-item" href="#" onclick="event.preventDefault(); updateStatus('ditolak', document.getElementById('currentSuratId').value)"><i class="fas fa-times-circle me-2 text-danger"></i>Tolak</a></li>
-                        <li><a class="dropdown-item" href="#" onclick="event.preventDefault(); updateStatus('diproses', document.getElementById('currentSuratId').value)"><i class="fas fa-cog me-2 text-warning"></i>Proses</a></li>
-                        <li><a class="dropdown-item" href="#" onclick="event.preventDefault(); updateStatus('selesai', document.getElementById('currentSuratId').value)"><i class="fas fa-check-double me-2 text-primary"></i>Selesai</a></li>
-                    </ul>
                 </div>
+                <textarea class="form-control form-control-sm" id="statusKeterangan" rows="2" placeholder="Masukkan keterangan/catatan tindakan..."></textarea>
+            </div>
             </div>
         </div>
     </div>
@@ -1393,23 +1397,34 @@ document.addEventListener('DOMContentLoaded', function() {
 // FUNGSI GLOBAL
 // ==========================================
 
-// Fungsi Update Status
-window.updateStatus = function(status, suratId) {
-    if (!suratId) return;
+window.updateStatus = function() {
+    const suratId = document.getElementById('currentSuratId')?.value;
+    const status = document.getElementById('newStatusSelect')?.value;
+    const keterangan = document.getElementById('statusKeterangan')?.value;
+
+    if (!suratId || !status) return;
+    if (!keterangan.trim()) {
+        alert('Keterangan wajib diisi untuk riwayat proses.');
+        return;
+    }
+
     fetch(`/surat-masuk/${suratId}/update-status`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content'), 'Accept': 'application/json' },
-        body: JSON.stringify({ id: suratId, status: status })
+        body: JSON.stringify({ id: suratId, status: status, keterangan: keterangan })
     })
     .then(response => response.json())
     .then(data => {
         if (data.success) {
-            showSuccessModal('Status berhasil diperbarui menjadi ' + status);
-            setTimeout(() => lihatDetailSuratMasuk(suratId), 1000); // Refresh detail untuk muat riwayat baru
+            showSuccessModal('Status berhasil diperbarui');
+            // Reset form setelah berhasil
+            document.getElementById('statusKeterangan').value = '';
+            // Refresh detail untuk muat riwayat baru
+            setTimeout(() => lihatDetailSuratMasuk(suratId), 1000);
         } else {
-            alert('Gagal mengupdate status: ' + (data.message || 'Terjadi kesalahan'));
+            alert('Gagal: ' + (data.message || 'Terjadi kesalahan'));
         }
-    }).catch(error => { console.error('Error:', error); alert('Terjadi kesalahan saat mengupdate status'); });
+    }).catch(error => { console.error('Error:', error); alert('Gagal menyimpan status.'); });
 };
 
 // Fungsi Lihat Detail Surat Masuk (Sekarang termasuk Riwayat Proses)
@@ -1463,20 +1478,20 @@ window.lihatDetailSuratMasuk = function(id) {
         if (timelineContainer && data.riwayat) {
             timelineContainer.innerHTML = ''; // Kosongkan riwayat lama (hardcoded)
             
-            if (data.riwayat.length > 0) {
-                data.riwayat.forEach(riw => {
-                    const statusColors = { 'Baru': 'warning', 'Diterima': 'success', 'Ditolak': 'danger', 'Diproses': 'info', 'Selesai': 'primary' };
-                    timelineContainer.innerHTML += `
-                        <li class="timeline-item">
-                            <div class="timeline-marker" style="background-color: var(--${statusColors[riw.status_name] || 'secondary'})"></div>
-                            <div class="timeline-content">
-                                <h6 class="timeline-title">${riw.status_name}</h6>
-                                <p class="timeline-text">${riw.keterangan}</p>
-                                <small class="text-muted d-block">Oleh: ${riw.user_name} • ${riw.tanggal}</small>
-                            </div>
-                        </li>`;
-                });
-            } else {
+        if (data.riwayat.length > 0) {
+            const markerColors = { 'Baru': '#f39c12', 'Diterima': '#27ae60', 'Ditolak': '#e74c3c', 'Diproses': '#3498db', 'Selesai': '#9b59b6' };
+            data.riwayat.forEach(riw => {
+                timelineContainer.innerHTML += `
+                    <li class="timeline-item">
+                        <div class="timeline-marker" style="background-color: ${markerColors[riw.status_name] || '#6c757d'}"></div>
+                        <div class="timeline-content">
+                            <h6 class="timeline-title">${riw.status_name}</h6>
+                            <p class="timeline-text">${riw.keterangan || '-'}</p>
+                            <small class="text-muted d-block">Oleh: ${riw.user_name} • ${riw.tanggal}</small>
+                        </div>
+                    </li>`;
+            });
+        } else {
                 timelineContainer.innerHTML = '<li class="timeline-item"><div class="timeline-marker"></div><div class="timeline-content"><p class="text-muted">Belum ada riwayat proses.</p></div></li>';
             }
         }

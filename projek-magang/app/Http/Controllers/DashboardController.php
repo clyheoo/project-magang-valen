@@ -316,29 +316,25 @@ class DashboardController extends Controller
         $request->validate([
             'id' => 'required|integer|exists:surat_masuk,id',
             'status' => 'required|string|in:baru,diterima,ditolak,diproses,selesai',
+            'keterangan' => 'required|string|max:255' // TAMBAHKAN INI
         ]);
 
         $surat = SuratMasuk::findOrFail($request->id);
-        $oldStatus = $surat->status;
         $surat->status = $request->status;
         $surat->save();
 
-        // Simpan riwayat status
+        // Gunakan $request->keterangan dari inputan user
         RiwayatStatus::create([
             'surat_masuk_id' => $surat->id,
             'status' => $request->status,
             'user_id' => auth()->id(),
             'tanggal' => now(),
-            'keterangan' => 'Status diperbarui menjadi ' . $this->getStatusName($request->status),
+            'keterangan' => $request->keterangan // GANTI YANG LAMA DENGAN INI
         ]);
 
-        // Broadcast event untuk real-time update
         broadcast(new SuratMasukUpdated($surat, 'updated'));
 
-        return response()->json([
-            'success' => true,
-            'old_status' => $oldStatus,
-        ]);
+        return response()->json(['success' => true]);
     }
 
     /**

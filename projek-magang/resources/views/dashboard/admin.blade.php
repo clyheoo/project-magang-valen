@@ -7,7 +7,7 @@
 <section id="dashboard" class="dashboard-section active">
     <div class="d-flex justify-content-between align-items-center pt-3 pb-2 mb-3 border-bottom">
         <div class="d-flex align-items-center">
-            <button class="btn btn-outline-secondary me-3" id="sidebarToggle"><i class="fas fa-bars"></i></button>
+            <button class="btn btn-outline-secondary me-3 sidebar-toggle-btn" data-toggle-sidebar><i class="fas fa-bars"></i></button>
             <h1 class="h2 mb-0">Dashboard Overview</h1>
         </div>
     </div>
@@ -200,7 +200,7 @@
 <section id="surat-masuk" class="dashboard-section">
     <div class="d-flex justify-content-between flex-wrap align-items-center pt-3 pb-2 mb-3 border-bottom">
         <div class="d-flex align-items-center">
-            <button class="btn btn-outline-secondary me-3" id="sidebarToggle"><i class="fas fa-bars"></i></button>
+            <button class="btn btn-outline-secondary me-3 sidebar-toggle-btn" data-toggle-sidebar><i class="fas fa-bars"></i></button>
             <h1 class="h2">Surat Masuk</h1>
         </div>
         <div class="d-flex gap-2 align-items-center flex-wrap">
@@ -291,7 +291,7 @@
 <section id="beban-kerja" class="dashboard-section">
     <div class="d-flex justify-content-between align-items-center pt-3 pb-2 mb-3 border-bottom">
         <div class="d-flex align-items-center">
-            <button class="btn btn-outline-secondary me-3" id="sidebarToggle"><i class="fas fa-bars"></i></button>
+            <button class="btn btn-outline-secondary me-3 sidebar-toggle-btn" data-toggle-sidebar><i class="fas fa-bars"></i></button>
             <h1 class="h2">Analisis Beban Kerja</h1>
         </div>
     </div>
@@ -385,7 +385,7 @@
 <section id="arsip" class="dashboard-section">
     <div class="d-flex justify-content-between flex-wrap align-items-center pt-3 pb-2 mb-3 border-bottom">
         <div class="d-flex align-items-center">
-            <button class="btn btn-outline-secondary me-3" id="sidebarToggle"><i class="fas fa-bars"></i></button>
+            <button class="btn btn-outline-secondary me-3 sidebar-toggle-btn" data-toggle-sidebar><i class="fas fa-bars"></i></button>
             <h1 class="h2">Arsip Digital</h1>
         </div>
         <div class="d-flex gap-2 align-items-center flex-wrap">
@@ -466,7 +466,7 @@
 <section id="laporan" class="dashboard-section">
     <div class="d-flex justify-content-between flex-wrap align-items-center pt-3 pb-2 mb-3 border-bottom">
         <div class="d-flex align-items-center">
-            <button class="btn btn-outline-secondary me-3" id="sidebarToggle"><i class="fas fa-bars"></i></button>
+            <button class="btn btn-outline-secondary me-3 sidebar-toggle-btn" data-toggle-sidebar><i class="fas fa-bars"></i></button>
             <h1 class="h2">Laporan & Statistik</h1>
         </div>
         <div class="d-flex gap-2">
@@ -540,7 +540,7 @@
 <section id="pengguna" class="dashboard-section">
     <div class="d-flex justify-content-between flex-wrap align-items-center pt-3 pb-2 mb-3 border-bottom">
         <div class="d-flex align-items-center">
-            <button class="btn btn-outline-secondary me-3" id="sidebarToggle"><i class="fas fa-bars"></i></button>
+            <button class="btn btn-outline-secondary me-3 sidebar-toggle-btn" data-toggle-sidebar><i class="fas fa-bars"></i></button>
             <h1 class="h2">Manajemen Pengguna</h1>
         </div>
         <div class="d-flex gap-2">
@@ -953,7 +953,10 @@
                         </div>
                     </div>
                     <div class="mb-3"><label class="form-label">Kepada</label><input type="text" class="form-control" name="penerima" placeholder="Nama instansi/penerima" required></div>
+                    <div class="mb-3"><label class="form-label">Judul Laporan</label><input type="text" class="form-control" name="judul_laporan" required></div>
                     <div class="mb-3"><label class="form-label">Perihal</label><textarea class="form-control" name="perihal" rows="4" required></textarea></div>
+                    <div class="mb-3"><label class="form-label">Instruksi Disposisi</label><input type="text" class="form-control" name="instruksi_disposisi"></div>
+                    <div class="mb-3"><label class="form-label">Instruksi Tambahan</label><input type="text" class="form-control" name="instruksi_tambahan"></div>
                     <div class="mb-3">
                         <label class="form-label">Lampiran</label>
                         <input type="file" class="form-control" name="file" accept=".pdf,.doc,.docx,.xls,.xlsx" multiple>
@@ -1234,7 +1237,6 @@
 </div>
 @endsection
 
-@push('scripts')
 <script>
 document.addEventListener('DOMContentLoaded', function() {
     // Toggle department visibility based on role
@@ -1427,7 +1429,6 @@ window.updateStatus = function() {
     }).catch(error => { console.error('Error:', error); alert('Gagal menyimpan status.'); });
 };
 
-// Fungsi Lihat Detail Surat Masuk (Sekarang termasuk Riwayat Proses)
 window.lihatDetailSuratMasuk = function(id) {
     document.querySelectorAll('.dashboard-section').forEach(s => s.classList.remove('active'));
     const detailSection = document.getElementById('suratDetailSection');
@@ -1473,29 +1474,27 @@ window.lihatDetailSuratMasuk = function(id) {
             else { fileLink.style.display = 'none'; }
         }
 
-        // TAMBAHKAN: Render Riwayat Proses secara Dinamis
         const timelineContainer = detailSection.querySelector('.timeline');
         if (timelineContainer && data.riwayat) {
-            timelineContainer.innerHTML = ''; // Kosongkan riwayat lama (hardcoded)
+            timelineContainer.innerHTML = '';
             
-        if (data.riwayat.length > 0) {
-            const markerColors = { 'Baru': '#f39c12', 'Diterima': '#27ae60', 'Ditolak': '#e74c3c', 'Diproses': '#3498db', 'Selesai': '#9b59b6' };
-            data.riwayat.forEach(riw => {
-                timelineContainer.innerHTML += `
-                    <li class="timeline-item">
-                        <div class="timeline-marker" style="background-color: ${markerColors[riw.status_name] || '#6c757d'}"></div>
-                        <div class="timeline-content">
-                            <h6 class="timeline-title">${riw.status_name}</h6>
-                            <p class="timeline-text">${riw.keterangan || '-'}</p>
-                            <small class="text-muted d-block">Oleh: ${riw.user_name} • ${riw.tanggal}</small>
-                        </div>
-                    </li>`;
-            });
-        } else {
+            if (data.riwayat.length > 0) {
+                const markerColors = { 'Baru': '#f39c12', 'Diterima': '#27ae60', 'Ditolak': '#e74c3c', 'Diproses': '#3498db', 'Selesai': '#9b59b6' };
+                data.riwayat.forEach(riw => {
+                    timelineContainer.innerHTML += `
+                        <li class="timeline-item">
+                            <div class="timeline-marker" style="background-color: ${markerColors[riw.status_name] || '#6c757d'}"></div>
+                            <div class="timeline-content">
+                                <h6 class="timeline-title">${riw.status_name}</h6>
+                                <p class="timeline-text">${riw.keterangan || '-'}</p>
+                                <small class="text-muted d-block">Oleh: ${riw.user_name} • ${riw.tanggal}</small>
+                            </div>
+                        </li>`;
+                });
+            } else {
                 timelineContainer.innerHTML = '<li class="timeline-item"><div class="timeline-marker"></div><div class="timeline-content"><p class="text-muted">Belum ada riwayat proses.</p></div></li>';
             }
         }
     }).catch(error => { console.error('Error:', error); alert('Terjadi kesalahan saat mengambil data surat'); });
 };
 </script>
-@endpush

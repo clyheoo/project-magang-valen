@@ -178,7 +178,7 @@ class DashboardController extends Controller
                 ->pluck('total', 'status')
                 ->toArray();
 
-            // Return view ADMIN
+             // Return view ADMIN
             return view('dashboard.admin', compact(
                 'recentActivities', 'suratMasukHariIni', 'suratKeluarHariIni', 'belumDitindakSidebarCount',
                 'suratMasukCount', 'suratKeluarCount', 'avgWaktuCount', 'totalLaporanCount', 'totalArsipCount',
@@ -190,10 +190,40 @@ class DashboardController extends Controller
             ));
         }
 
+        // ==========================================
+        // DATA CHART UNTUK USER (DI LUAR BLOK ADMIN)
+        // ==========================================
+        $userDivisionChartData = Divisi::withCount([
+            'suratMasuk' => function($q) use ($user) {
+                $q->where('created_by', $user->id)
+                  ->orWhere('divisi_id', $user->divisi_id);
+            }
+        ])->get()->map(function($d) use ($user) {
+            return [
+                'name' => $d->nama_divisi,
+                'surat_masuk' => $d->surat_masuk_count,
+                'surat_keluar' => \App\Models\SuratKeluar::where('user_id', $user->id)->count(),
+            ];
+        })->filter(function($item) {
+            return $item['surat_masuk'] > 0 || $item['surat_keluar'] > 0;
+        })->values();
+
+        $userStatusChartData = SuratMasuk::where('created_by', $user->id)
+            ->orWhere('divisi_id', $user->divisi_id)
+            ->select('status', \DB::raw('count(*) as total'))
+            ->groupBy('status')
+            ->pluck('total', 'status')
+            ->toArray();
+
+        // Assign ke variabel dengan nama yang sama
+        $divisionChartData = $userDivisionChartData;
+        $statusChartData = $userStatusChartData;
+
         // Return view USER
         return view('dashboard.user', compact(
             'suratMasukCount', 'suratKeluarCount', 'belumDitindakCount', 'suratMasuk', 'suratKeluar',
-            'divisi', 'suratMasukHariIni', 'suratKeluarHariIni', 'belumDitindakSidebarCount', 'avgWaktuCount'
+            'divisi', 'suratMasukHariIni', 'suratKeluarHariIni', 'belumDitindakSidebarCount', 'avgWaktuCount',
+            'divisionChartData', 'statusChartData'
         ));
     }
 

@@ -7,7 +7,7 @@
 <section id="dashboard" class="dashboard-section active">
     <div class="d-flex justify-content-between align-items-center pt-3 pb-2 mb-3 border-bottom">
         <div class="d-flex align-items-center">
-            <button class="btn btn-outline-secondary me-3" id="sidebarToggle"><i class="fas fa-bars"></i></button>
+            <button class="btn btn-outline-secondary me-3 sidebar-toggle-btn" data-toggle-sidebar><i class="fas fa-bars"></i></button>
             <h1 class="h2 mb-0">Dashboard Overview</h1>
         </div>
     </div>
@@ -70,7 +70,7 @@
 <section id="surat-masuk" class="dashboard-section">
     <div class="d-flex justify-content-between flex-wrap align-items-center pt-3 pb-2 mb-3 border-bottom">
         <div class="d-flex align-items-center">
-            <button class="btn btn-outline-secondary me-3" id="sidebarToggle"><i class="fas fa-bars"></i></button>
+            <button class="btn btn-outline-secondary me-3 sidebar-toggle-btn" data-toggle-sidebar><i class="fas fa-bars"></i></button>
             <h1 class="h2">Surat Masuk</h1>
         </div>
         <div class="d-flex gap-2 align-items-center flex-wrap">
@@ -184,7 +184,7 @@
     </div>
 </div>
 
-{{-- ===== SETTINGS MODAL (Simplified for User) ===== --}}
+{{-- ===== SETTINGS MODAL ===== --}}
 <div class="modal fade" id="settingsModal" tabindex="-1">
     <div class="modal-dialog">
         <div class="modal-content">
@@ -281,17 +281,34 @@
     </div>
 </div>
 
-{{-- ===== SURAT KELUAR BARU ===== --}}
+{{-- ===== SURAT KELUAR BARU (LENGKAP) ===== --}}
 <div class="modal fade" id="modalSuratKeluarBaru" tabindex="-1">
     <div class="modal-dialog modal-lg">
         <div class="modal-content">
-            <div class="modal-header"><h5 class="modal-title"><i class="fas fa-paper-plane me-2"></i>Buat Surat Keluar</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
+            <div class="modal-header">
+                <h5 class="modal-title">Buat Surat Keluar Baru</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
             <form id="formSuratKeluarBaru" action="{{ route('surat-keluar.store') }}" method="POST" enctype="multipart/form-data">
                 @csrf
                 <div class="modal-body">
                     <div class="mb-3"><label class="form-label">Nomor Surat</label><input type="text" class="form-control" name="nomor_surat" required></div>
                     <div class="row">
                         <div class="col-md-6 mb-3"><label class="form-label">Tanggal Kirim</label><input type="date" class="form-control" name="tanggal_kirim" required></div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Divisi</label>
+                            <select class="form-select" name="divisi_id" required>
+                                <option value="">Pilih Divisi</option>
+                                @foreach($divisi as $d)<option value="{{ $d->id }}">{{ $d->nama_divisi }}</option>@endforeach
+                            </select>
+                        </div>
+                    </div>
+                    <div class="mb-3"><label class="form-label">Penerima</label><input type="text" class="form-control" name="penerima" required></div>
+                    <div class="mb-3"><label class="form-label">Judul Laporan</label><input type="text" class="form-control" name="judul_laporan" required></div>
+                    <div class="mb-3"><label class="form-label">Perihal</label><textarea class="form-control" name="perihal" rows="3" required></textarea></div>
+                    <div class="mb-3"><label class="form-label">Instruksi Disposisi</label><input type="text" class="form-control" name="instruksi_disposisi"></div>
+                    <div class="mb-3"><label class="form-label">Instruksi Tambahan</label><input type="text" class="form-control" name="instruksi_tambahan"></div>
+                    <div class="row">
                         <div class="col-md-6 mb-3">
                             <label class="form-label">Status</label>
                             <select class="form-select" name="status">
@@ -301,13 +318,7 @@
                             </select>
                         </div>
                     </div>
-                    <div class="mb-3"><label class="form-label">Kepada</label><input type="text" class="form-control" name="penerima" placeholder="Nama instansi/penerima" required></div>
-                    <div class="mb-3"><label class="form-label">Perihal</label><textarea class="form-control" name="perihal" rows="4" required></textarea></div>
-                    <div class="mb-3">
-                        <label class="form-label">Lampiran</label>
-                        <input type="file" class="form-control" name="file" accept=".pdf,.doc,.docx,.xls,.xlsx" multiple>
-                        <div class="form-text">PDF, DOCX, XLSX - max 10MB per file</div>
-                    </div>
+                    <div class="mb-3"><label class="form-label">Lampiran</label><input type="file" class="form-control" name="file" accept=".pdf,.doc,.docx,.xls,.xlsx" multiple></div>
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Batal</button>
@@ -317,70 +328,240 @@
         </div>
     </div>
 </div>
+
+{{-- ===== LIHAT SURAT KELUAR ===== --}}
+<div class="modal fade" id="modalLihatSuratKeluar" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Detail Surat Keluar</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div class="row">
+                    <div class="col-md-8">
+                        <table class="table table-borderless">
+                            <tr><td width="30%"><strong>Nomor Surat</strong></td><td width="5%">:</td><td id="detailKeluarNomorSurat"></td></tr>
+                            <tr><td><strong>Judul Laporan</strong></td><td>:</td><td id="detailKeluarJudulLaporan"></td></tr>
+                            <tr><td><strong>Penerima</strong></td><td>:</td><td id="detailKeluarPenerima"></td></tr>
+                            <tr><td><strong>Tanggal Kirim</strong></td><td>:</td><td id="detailKeluarTanggalKirim"></td></tr>
+                            <tr><td><strong>Perihal</strong></td><td>:</td><td id="detailKeluarPerihal"></td></tr>
+                            <tr><td><strong>Divisi</strong></td><td>:</td><td id="detailKeluarDivisi"></td></tr>
+                            <tr><td><strong>Status</strong></td><td>:</td><td id="detailKeluarStatus"></td></tr>
+                            <tr><td><strong>Pengirim (User)</strong></td><td>:</td><td id="detailKeluarUser"></td></tr>
+                            <tr><td><strong>Format File</strong></td><td>:</td><td id="detailKeluarFormat"></td></tr>
+                        </table>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="card bg-light h-100">
+                            <div class="card-body text-center d-flex flex-column justify-content-center align-items-center">
+                                <div id="detailKeluarFileIcon" class="mb-3"></div>
+                                <h5 class="card-title">Lampiran</h5>
+                                <a href="#" id="detailKeluarFileLink" target="_blank" rel="noopener noreferrer" class="btn btn-primary mt-2" style="display: none;"></a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Tutup</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+{{-- ===== EDIT SURAT KELUAR ===== --}}
+<div class="modal fade" id="modalEditSuratKeluar" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Edit Surat Keluar</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <form id="formEditSuratKeluar" enctype="multipart/form-data">
+                @csrf @method('PUT')
+                <input type="hidden" id="editKeluarId" name="id">
+                <div class="modal-body">
+                    <div class="mb-3"><label class="form-label">Nomor Surat</label><input type="text" class="form-control" id="editKeluarNomor" name="nomor_surat" required></div>
+                    <div class="row">
+                        <div class="col-md-6 mb-3"><label class="form-label">Tanggal Kirim</label><input type="date" class="form-control" id="editKeluarTanggal" name="tanggal_kirim" required></div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Divisi</label>
+                            <select class="form-select" id="editKeluarDivisi" name="divisi_id" required>
+                                <option value="">Pilih Divisi</option>
+                                @foreach($divisi as $d)<option value="{{ $d->id }}">{{ $d->nama_divisi }}</option>@endforeach
+                            </select>
+                        </div>
+                    </div>
+                    <div class="mb-3"><label class="form-label">Penerima</label><input type="text" class="form-control" id="editKeluarPenerima" name="penerima" required></div>
+                    <div class="mb-3"><label class="form-label">Judul Laporan</label><input type="text" class="form-control" id="editKeluarJudul" name="judul_laporan" required></div>
+                    <div class="mb-3"><label class="form-label">Perihal</label><textarea class="form-control" id="editKeluarPerihal" name="perihal" rows="3" required></textarea></div>
+                    <div class="mb-3"><label class="form-label">Instruksi Disposisi</label><input type="text" class="form-control" id="editKeluarInstruksiDisposisi" name="instruksi_disposisi"></div>
+                    <div class="mb-3"><label class="form-label">Instruksi Tambahan</label><input type="text" class="form-control" id="editKeluarInstruksiTambahan" name="instruksi_tambahan"></div>
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Status</label>
+                            <select class="form-select" id="editKeluarStatus" name="status" required>
+                                <option value="draft">Draft</option>
+                                <option value="dikirim">Dikirim</option>
+                                <option value="diterima">Diterima</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Ganti Lampiran (Opsional)</label>
+                        <input type="file" class="form-control" id="editKeluarFile" name="file">
+                        <div class="form-text">Kosongkan jika tidak ingin mengubah lampiran.</div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Batal</button>
+                    <button type="submit" class="btn btn-primary">Simpan Perubahan</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
 @endsection
 
-@push('scripts')
 <script>
 document.addEventListener('DOMContentLoaded', function() {
-    // Filter: Surat Masuk (User hanya bisa lihat miliknya/divisinya)
+
+    // ==========================================
+    // LIHAT SURAT KELUAR
+    // ==========================================
+    window.lihatSuratKeluar = function(id) {
+        fetch('/surat-keluar/' + id, {
+            headers: { 'Accept': 'application/json' }
+        })
+        .then(function(response) {
+            if (!response.ok) throw new Error('Gagal mengambil data surat.');
+            return response.json();
+        })
+        .then(function(data) {
+            if (data.success && data.surat) {
+                var surat = data.surat;
+                var modal = new bootstrap.Modal(document.getElementById('modalLihatSuratKeluar'));
+
+                document.getElementById('detailKeluarNomorSurat').textContent = surat.nomor_surat || '-';
+                document.getElementById('detailKeluarJudulLaporan').textContent = surat.judul_laporan || '-';
+                document.getElementById('detailKeluarPenerima').textContent = surat.penerima || '-';
+                document.getElementById('detailKeluarTanggalKirim').textContent = surat.tanggal_kirim ? new Date(surat.tanggal_kirim).toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' }) : '-';
+                document.getElementById('detailKeluarPerihal').textContent = surat.perihal || '-';
+                document.getElementById('detailKeluarDivisi').textContent = surat.divisi_name || '-';
+                document.getElementById('detailKeluarUser').textContent = surat.user_name || '-';
+                document.getElementById('detailKeluarFormat').textContent = surat.format_name || '-';
+
+                var statusBadge = document.getElementById('detailKeluarStatus');
+                statusBadge.innerHTML = '<span class="badge bg-' + (surat.status_color || 'secondary') + '">' + (surat.status_name || surat.status) + '</span>';
+
+                var fileLink = document.getElementById('detailKeluarFileLink');
+                var fileIcon = document.getElementById('detailKeluarFileIcon');
+                if (surat.file_path) {
+                    fileLink.href = '/storage/' + surat.file_path;
+                    fileLink.textContent = 'Lihat ' + (surat.format_name || 'File');
+                    fileLink.style.display = 'inline-block';
+                    var iconType = 'secondary';
+                    var iconName = 'file';
+                    if (surat.format_name) {
+                        var fn = surat.format_name.toLowerCase();
+                        if (fn.includes('pdf')) { iconType = 'danger'; iconName = 'file-pdf'; }
+                        else if (fn.includes('word') || fn.includes('doc')) { iconType = 'primary'; iconName = 'file-word'; }
+                        else if (fn.includes('excel') || fn.includes('xls')) { iconType = 'success'; iconName = 'file-excel'; }
+                    }
+                    fileIcon.innerHTML = '<i class="fas fa-' + iconName + ' fa-3x text-' + iconType + '"></i>';
+                } else {
+                    fileLink.style.display = 'none';
+                    fileIcon.innerHTML = '<p class="text-muted">Tidak ada lampiran.</p>';
+                }
+
+                modal.show();
+            } else {
+                alert(data.message || 'Gagal memuat detail surat.');
+            }
+        })
+        .catch(function(error) { console.error('Error:', error); });
+    };
+
+    // ==========================================
+    // FILTER: SURAT MASUK
+    // ==========================================
     function loadSuratMasuk(search, status) {
-        const userId = document.querySelector('meta[name="user-id"]').content;
-        const userDivisi = document.querySelector('meta[name="user-divisi-id"]').content;
+        var userId = document.querySelector('meta[name="user-id"]').content;
+        var userDivisi = document.querySelector('meta[name="user-divisi-id"]').content;
         
-        fetch(`{{ route('surat-masuk.index') }}?search=${encodeURIComponent(search||'')}&status=${encodeURIComponent(status||'')}`, { headers: { 'X-Requested-With': 'XMLHttpRequest', 'Accept': 'application/json' } })
-        .then(r => r.json())
-        .then(data => {
-            const tbody = document.getElementById('suratMasukTableBody');
+        fetch('{{ route("surat-masuk.index") }}?search=' + encodeURIComponent(search || '') + '&status=' + encodeURIComponent(status || ''), {
+            headers: { 'X-Requested-With': 'XMLHttpRequest', 'Accept': 'application/json' }
+        })
+        .then(function(r) { return r.json(); })
+        .then(function(data) {
+            var tbody = document.getElementById('suratMasukTableBody');
             if (!tbody || !data.success) return;
             tbody.innerHTML = '';
             
-            let filteredData = data.suratMasuk.filter(item => 
-                String(item.created_by) === String(userId) || String(item.divisi_id) === String(userDivisi)
-            );
+            var filteredData = data.suratMasuk.filter(function(item) {
+                return String(item.created_by) === String(userId) || String(item.divisi_id) === String(userDivisi);
+            });
             
             if (filteredData.length) {
-                let no = 1;
-                filteredData.forEach(item => {
-                    const tanggal = item.tanggal ? new Date(item.tanggal).toLocaleDateString('id-ID') : '-';
-                    const divisiNama = item.divisi?.nama_divisi || item.nama_divisi || 'N/A';
-                    const icon = getFileIconClass(item.format_file_id, 'fa-lg', item.format_file?.nama_format || '');
-                    const statuses = { baru: 'warning', diterima: 'success', ditolak: 'danger', diproses: 'info', selesai: 'primary' };
-                    const badge = `<span class="badge bg-${statuses[item.status] || 'secondary'}">${item.status}</span>`;
-                    const canEdit = String(item.created_by) === String(userId);
+                var no = 1;
+                filteredData.forEach(function(item) {
+                    var tanggal = item.tanggal ? new Date(item.tanggal).toLocaleDateString('id-ID') : '-';
+                    var divisiNama = item.divisi && item.divisi.nama_divisi ? item.divisi.nama_divisi : (item.nama_divisi || 'N/A');
+                    var icon = getFileIconClass(item.format_file_id, 'fa-lg', item.format_file && item.format_file.nama_format ? item.format_file.nama_format : '');
+                    var statuses = { baru: 'warning', diterima: 'success', ditolak: 'danger', diproses: 'info', selesai: 'primary' };
+                    var badge = '<span class="badge bg-' + (statuses[item.status] || 'secondary') + '">' + item.status + '</span>';
+                    var canEdit = String(item.created_by) === String(userId);
                     
-                    tbody.innerHTML += `<tr data-id="${item.id}"><th>${no++}</th><td>${tanggal}</td><td>${item.pengirim||'N/A'}</td><td class="text-truncate" style="max-width:150px" title="${item.instruksi_disposisi||''}">${item.instruksi_disposisi||'-'}</td><td class="text-truncate" style="max-width:150px" title="${item.instruksi_tambahan||''}">${item.instruksi_tambahan||'-'}</td><td><span class="divisi-tag divisi-${item.divisi_id||0}">${divisiNama}</span></td><td><i class="${icon}"></i></td><td>${badge}</td><td><div class="btn-group btn-group-sm"><a href="/surat-masuk/${item.id}" class="btn btn-outline-primary"><i class="fas fa-eye"></i></a>${canEdit ? `<button class="btn btn-outline-secondary" onclick="editSuratMasuk(${item.id})"><i class="fas fa-edit"></i></button>` : ''}</div></td></tr>`;
+                    tbody.innerHTML += '<tr data-id="' + item.id + '"><th>' + (no++) + '</th><td>' + tanggal + '</td><td>' + (item.pengirim || 'N/A') + '</td><td class="text-truncate" style="max-width:150px" title="' + (item.instruksi_disposisi || '') + '">' + (item.instruksi_disposisi || '-') + '</td><td class="text-truncate" style="max-width:150px" title="' + (item.instruksi_tambahan || '') + '">' + (item.instruksi_tambahan || '-') + '</td><td><span class="divisi-tag divisi-' + (item.divisi_id || 0) + '">' + divisiNama + '</span></td><td><i class="' + icon + '"></i></td><td>' + badge + '</td><td><div class="btn-group btn-group-sm"><a href="/surat-masuk/' + item.id + '" class="btn btn-outline-primary"><i class="fas fa-eye"></i></a>' + (canEdit ? '<button class="btn btn-outline-secondary" onclick="editSuratMasuk(' + item.id + ')"><i class="fas fa-edit"></i></button>' : '') + '</div></td></tr>';
                 });
             } else {
                 tbody.innerHTML = '<tr><td colspan="9" class="text-center">Tidak ada data.</td></tr>';
             }
-        }).catch(() => { document.getElementById('suratMasukTableBody').innerHTML = '<tr><td colspan="9" class="text-center text-danger">Gagal memuat data.</td></tr>'; });
+        })
+        .catch(function() {
+            var tbody = document.getElementById('suratMasukTableBody');
+            if (tbody) tbody.innerHTML = '<tr><td colspan="9" class="text-center text-danger">Gagal memuat data.</td></tr>';
+        });
     }
 
-    document.getElementById('searchBtnMasuk')?.addEventListener('click', () => loadSuratMasuk(document.getElementById('searchSuratMasuk').value, document.getElementById('filterStatus').value));
-    document.getElementById('searchSuratMasuk')?.addEventListener('keyup', e => { if (e.key === 'Enter') loadSuratMasuk(e.target.value, document.getElementById('filterStatus').value); });
-    document.getElementById('filterStatus')?.addEventListener('change', () => loadSuratMasuk(document.getElementById('searchSuratMasuk').value, document.getElementById('filterStatus').value));
+    document.getElementById('searchBtnMasuk').addEventListener('click', function() {
+        loadSuratMasuk(document.getElementById('searchSuratMasuk').value, document.getElementById('filterStatus').value);
+    });
+    document.getElementById('searchSuratMasuk').addEventListener('keyup', function(e) {
+        if (e.key === 'Enter') loadSuratMasuk(e.target.value, document.getElementById('filterStatus').value);
+    });
+    document.getElementById('filterStatus').addEventListener('change', function() {
+        loadSuratMasuk(document.getElementById('searchSuratMasuk').value, document.getElementById('filterStatus').value);
+    });
 
-    // Filter: Surat Keluar (User hanya bisa lihat miliknya)
-    function loadSuratKeluar(search, status) {
-        const userId = document.querySelector('meta[name="user-id"]').content;
+    // ==========================================
+    // FILTER: SURAT KELUAR
+    // ==========================================
+    function loadSuratKeluar(search, divisi, status) {
+        var userId = document.querySelector('meta[name="user-id"]').content;
         
-        fetch(`{{ route('surat-keluar.index') }}?search=${encodeURIComponent(search||'')}&status=${encodeURIComponent(status||'')}`, { headers: { 'X-Requested-With': 'XMLHttpRequest', 'Accept': 'application/json' } })
-        .then(r => r.json())
-        .then(data => {
-            const list = document.getElementById('suratKeluarList');
+        fetch('{{ route("surat-keluar.index") }}?search=' + encodeURIComponent(search || '') + '&divisi=' + encodeURIComponent(divisi || '') + '&status=' + encodeURIComponent(status || ''), {
+            headers: { 'X-Requested-With': 'XMLHttpRequest', 'Accept': 'application/json' }
+        })
+        .then(function(r) { return r.json(); })
+        .then(function(data) {
+            var list = document.getElementById('suratKeluarList');
             if (!list || !data.success) return;
             list.innerHTML = '';
             
-            let filteredData = data.suratKeluar.filter(item => String(item.user_id) === String(userId));
+            var filteredData = data.suratKeluar.filter(function(item) {
+                return String(item.user_id) === String(userId);
+            });
             
             if (filteredData.length) {
-                filteredData.forEach(item => {
-                    const divisiNama = item.divisi?.nama_divisi || 'N/A';
-                    const preview = (item.perihal || '').substring(0, 100);
-                    const statuses = { draft: 'bg-draft', dikirim: 'bg-dikirim', diterima: 'bg-diterima' };
-                    const badge = `<span class="badge ${statuses[item.status] || 'bg-secondary'}">${item.status}</span>`;
+                filteredData.forEach(function(item) {
+                    var divisiNama = item.divisi && item.divisi.nama_divisi ? item.divisi.nama_divisi : 'N/A';
+                    var preview = (item.perihal || '').substring(0, 100);
+                    var statuses = { draft: 'bg-draft', dikirim: 'bg-dikirim', diterima: 'bg-diterima' };
+                    var badge = '<span class="badge ' + (statuses[item.status] || 'bg-secondary') + '">' + item.status + '</span>';
                     
-                    list.innerHTML += `<div class="list-group-item email-item" data-id="${item.id}"><div class="d-flex w-100 align-items-center"><div class="flex-grow-1"><div class="d-flex w-100 justify-content-between"><h6 class="mb-1 email-subject">${item.penerima||'N/A'}</h6><small class="text-muted">${item.tanggal_kirim||''}</small></div><p class="mb-1 email-preview">${preview}</p><div class="email-meta mt-2"><span class="badge bg-light text-dark me-2">${divisiNama}</span>${badge}</div></div><div class="ms-3"><div class="btn-group btn-group-sm"><a href="/surat-keluar/${item.id}" class="btn btn-outline-primary"><i class="fas fa-eye"></i></a><button class="btn btn-outline-secondary" onclick="editSuratKeluar(${item.id})"><i class="fas fa-edit"></i></button><button class="btn btn-outline-danger" onclick="hapusSuratKeluar(${item.id},event)"><i class="fas fa-trash"></i></button></div></div></div></div>`;
+                    list.innerHTML += '<div class="list-group-item email-item" data-id="' + item.id + '"><div class="d-flex w-100 align-items-center"><div class="flex-grow-1"><div class="d-flex w-100 justify-content-between"><h6 class="mb-1 email-subject">' + (item.penerima || 'N/A') + '</h6><small class="text-muted">' + (item.tanggal_kirim || '') + '</small></div><p class="mb-1 email-preview">' + preview + '</p><div class="email-meta mt-2"><span class="badge bg-light text-dark me-2">' + divisiNama + '</span>' + badge + '</div></div><div class="ms-3 email-actions"><div class="btn-group btn-group-sm"><button class="btn btn-outline-primary" onclick="lihatSuratKeluar(' + item.id + ')"><i class="fas fa-eye"></i></button><button class="btn btn-outline-secondary" onclick="editSuratKeluar(' + item.id + ')"><i class="fas fa-edit"></i></button><button class="btn btn-outline-danger" onclick="hapusSuratKeluar(' + item.id + ', event)"><i class="fas fa-trash"></i></button></div></div></div></div>';
                 });
             } else {
                 list.innerHTML = '<div class="list-group-item text-center p-5">Tidak ada data.</div>';
@@ -388,7 +569,88 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 
-    document.getElementById('searchSuratKeluar')?.addEventListener('keyup', () => loadSuratKeluar(document.getElementById('searchSuratKeluar').value, document.getElementById('filterStatusKeluar')?.value));
-    document.getElementById('filterStatusKeluar')?.addEventListener('change', () => loadSuratKeluar(document.getElementById('searchSuratKeluar').value, document.getElementById('filterStatusKeluar').value));
+    document.getElementById('btnSearchSuratKeluar').addEventListener('click', function() {
+        loadSuratKeluar(document.getElementById('searchSuratKeluar').value, document.getElementById('filterDivisiKeluar').value, document.getElementById('filterStatusKeluar').value);
+    });
+    document.getElementById('searchSuratKeluar').addEventListener('keyup', function(e) {
+        if (e.key === 'Enter') loadSuratKeluar(e.target.value, document.getElementById('filterDivisiKeluar').value, document.getElementById('filterStatusKeluar').value);
+    });
+    document.getElementById('filterDivisiKeluar').addEventListener('change', function() {
+        loadSuratKeluar(document.getElementById('searchSuratKeluar').value, this.value, document.getElementById('filterStatusKeluar').value);
+    });
+    document.getElementById('filterStatusKeluar').addEventListener('change', function() {
+        loadSuratKeluar(document.getElementById('searchSuratKeluar').value, document.getElementById('filterDivisiKeluar').value, this.value);
+    });
+
+    // ==========================================
+    // CHARTS
+    // ==========================================
+    try {
+        var ctxDivision = document.getElementById('divisionChartUser');
+        var divisionData = @json($divisionChartData ?? []);
+
+        if (ctxDivision && divisionData && divisionData.length > 0) {
+            new Chart(ctxDivision, {
+                type: 'bar',
+                data: {
+                    labels: divisionData.map(function(d) { return d.name; }),
+                    datasets: [
+                        {
+                            label: 'Surat Masuk',
+                            data: divisionData.map(function(d) { return d.surat_masuk; }),
+                            backgroundColor: 'rgba(52, 152, 219, 0.7)',
+                            borderColor: 'rgba(52, 152, 219, 1)',
+                            borderWidth: 1
+                        },
+                        {
+                            label: 'Surat Keluar',
+                            data: divisionData.map(function(d) { return d.surat_keluar; }),
+                            backgroundColor: 'rgba(39, 174, 96, 0.7)',
+                            borderColor: 'rgba(39, 174, 96, 1)',
+                            borderWidth: 1
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: { y: { beginAtZero: true } }
+                }
+            });
+        }
+
+        var ctxStatus = document.getElementById('statusChartUser');
+        var statusData = @json($statusChartData ?? []);
+
+        if (ctxStatus && statusData && Object.keys(statusData).length > 0) {
+            var statusColors = {
+                'baru': 'rgba(243, 156, 18, 0.7)',
+                'diterima': 'rgba(39, 174, 96, 0.7)',
+                'ditolak': 'rgba(231, 76, 60, 0.7)',
+                'diproses': 'rgba(52, 152, 219, 0.7)',
+                'selesai': 'rgba(155, 89, 182, 0.7)'
+            };
+
+            new Chart(ctxStatus, {
+                type: 'doughnut',
+                data: {
+                    labels: Object.keys(statusData),
+                    datasets: [{
+                        data: Object.values(statusData),
+                        backgroundColor: Object.keys(statusData).map(function(k) {
+                            return statusColors[k] || 'rgba(149, 165, 166, 0.7)';
+                        })
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false
+                }
+            });
+        }
+    } catch (chartError) {
+        console.warn('Chart initialization skipped:', chartError.message);
+    }
+
 });
-@endpush
+</script>

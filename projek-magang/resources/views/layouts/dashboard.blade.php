@@ -412,20 +412,58 @@
         @media (max-width: 767.98px) {
             /* Sidebar - Fixed overlay on mobile */
             .sidebar {
-                position: fixed;
-                top: 56px;
-                left: 0;
+                position: fixed !important;
+                top: 56px !important;
+                left: 0 !important;
                 width: 280px !important;
-                height: calc(100vh - 56px);
-                z-index: 999;
-                margin-left: -280px;
-                transition: margin-left 0.3s ease;
+                max-width: 280px !important;
+                height: calc(100vh - 56px) !important;
+                z-index: 999 !important;
+                margin-left: -280px !important;
+                padding: 0 !important;
+                transition: margin-left 0.3s ease !important;
                 box-shadow: 4px 0 15px rgba(0,0,0,0.2);
                 display: block !important;
+                overflow-x: hidden;
+                overflow-y: auto;
+                will-change: margin-left;
             }
             
+            /* Override .collapsed class di mobile */
+            .sidebar.collapsed {
+                width: 280px !important;
+                max-width: 280px !important;
+                margin-left: -280px !important;
+                padding: 0 !important;
+                overflow: hidden;
+            }
+            
+            /* Sidebar show state */
             .sidebar.show {
-                margin-left: 0;
+                margin-left: 0 !important;
+            }
+            
+            /* Overlay yang diperbaiki */
+            .sidebar-overlay {
+                display: none !important;
+                position: fixed !important;
+                top: 0 !important;
+                left: 0 !important;
+                width: 100% !important;
+                height: 100% !important;
+                background: rgba(0,0,0,0.5) !important;
+                z-index: 998 !important;
+                -webkit-backdrop-filter: blur(2px);
+                backdrop-filter: blur(2px);
+                opacity: 0;
+                transition: opacity 0.3s ease;
+                pointer-events: none;
+            }
+
+            .sidebar-overlay.active {
+                display: block !important;
+                opacity: 1 !important;
+                pointer-events: auto !important;
             }
             
             /* Main content - full width dengan padding minimal */
@@ -997,184 +1035,823 @@
         </div>
     </footer>
 
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.25/jspdf.plugin.autotable.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
-    @vite('resources/js/dashboard.js')
-    @stack('scripts')
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.25/jspdf.plugin.autotable.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 
-    <script>
-        // ============================================
-        // HELPER FUNCTIONS
-        // ============================================
-        
-        function getFileIconClass(formatFileId, size, formatName) {
-            size = size || 'fa-lg';
-            formatName = (formatName || '').toLowerCase();
-            var formatId = parseInt(formatFileId);
-            
-            if (formatName.includes('pdf')) return 'fas fa-file-pdf text-danger ' + size;
-            if (formatName.includes('word') || formatName.includes('doc')) return 'fas fa-file-word text-primary ' + size;
-            if (formatName.includes('excel') || formatName.includes('xls')) return 'fas fa-file-excel text-success ' + size;
-            
-            switch (formatId) {
-                case 1: return 'fas fa-file-pdf text-danger ' + size;
-                case 2: 
-                case 3: return 'fas fa-file-word text-primary ' + size;
-                case 5: return 'fas fa-file-excel text-success ' + size;
-                default: return 'fas fa-file text-secondary ' + size;
-            }
+<script>
+// ============================================
+// HELPER FUNCTIONS
+// ============================================
+
+function getFileIconClass(formatFileId, size, formatName) {
+    size = size || 'fa-lg';
+    formatName = (formatName || '').toLowerCase();
+    var formatId = parseInt(formatFileId);
+    
+    if (formatName.includes('pdf')) return 'fas fa-file-pdf text-danger ' + size;
+    if (formatName.includes('word') || formatName.includes('doc')) return 'fas fa-file-word text-primary ' + size;
+    if (formatName.includes('excel') || formatName.includes('xls')) return 'fas fa-file-excel text-success ' + size;
+    
+    switch (formatId) {
+        case 1: return 'fas fa-file-pdf text-danger ' + size;
+        case 2: 
+        case 3: return 'fas fa-file-word text-primary ' + size;
+        case 5: return 'fas fa-file-excel text-success ' + size;
+        default: return 'fas fa-file text-secondary ' + size;
+    }
+}
+
+function togglePasswordVisibility(inputId) {
+    const input = document.getElementById(inputId);
+    const icon = document.getElementById('toggleIcon-' + inputId);
+    if (!input || !icon) return;
+    if (input.type === 'password') {
+        input.type = 'text';
+        icon.classList.replace('fa-eye', 'fa-eye-slash');
+    } else {
+        input.type = 'password';
+        icon.classList.replace('fa-eye-slash', 'fa-eye');
+    }
+}
+
+// ============================================
+// MODAL FUNCTIONS
+// ============================================
+
+window.showSuccessModal = function(message) {
+    const el = document.getElementById('successMessage');
+    const modalEl = document.getElementById('successModal');
+    if (!el || !modalEl) return;
+    el.textContent = message;
+    const modal = new bootstrap.Modal(modalEl);
+    modal.show();
+    setTimeout(() => modal.hide(), 3000);
+};
+
+window.showErrorModal = function(message) {
+    const el = document.getElementById('errorMessage');
+    const modalEl = document.getElementById('errorModal');
+    if (!el || !modalEl) return;
+    el.textContent = message;
+    const modal = new bootstrap.Modal(modalEl);
+    modal.show();
+    setTimeout(() => modal.hide(), 3000);
+};
+
+// ============================================
+// SIDEBAR MOBILE FUNCTIONS
+// ============================================
+
+function closeMobileSidebar() {
+    const sidebar = document.getElementById('sidebar');
+    const overlay = document.getElementById('sidebarOverlay');
+    
+    if (sidebar) {
+        sidebar.classList.remove('show');
+    }
+    if (overlay) {
+        overlay.classList.remove('active');
+    }
+    if (window.innerWidth < 768) {
+        document.body.style.overflow = '';
+    }
+}
+
+function openMobileSidebar() {
+    const sidebar = document.getElementById('sidebar');
+    const overlay = document.getElementById('sidebarOverlay');
+    
+    if (sidebar) {
+        sidebar.classList.remove('collapsed');
+        sidebar.classList.add('show');
+    }
+    if (overlay) {
+        overlay.classList.add('active');
+    }
+    if (window.innerWidth < 768) {
+        document.body.style.overflow = 'hidden';
+    }
+}
+
+function toggleSidebar() {
+    if (window.innerWidth < 768) {
+        const sidebar = document.getElementById('sidebar');
+        if (sidebar && sidebar.classList.contains('show')) {
+            closeMobileSidebar();
+        } else {
+            openMobileSidebar();
         }
+    } else {
+        const sidebar = document.getElementById('sidebar');
+        const mainContent = document.getElementById('mainContentWrapper');
+        if (sidebar) sidebar.classList.toggle('collapsed');
+        if (mainContent) mainContent.classList.toggle('expanded');
+        setTimeout(() => window.dispatchEvent(new Event('resize')), 310);
+    }
+}
 
-        function togglePasswordVisibility(inputId) {
-            const input = document.getElementById(inputId);
-            const icon = document.getElementById('toggleIcon-' + inputId);
-            if (input.type === 'password') {
-                input.type = 'text';
-                icon.classList.replace('fa-eye', 'fa-eye-slash');
-            } else {
-                input.type = 'password';
-                icon.classList.replace('fa-eye-slash', 'fa-eye');
-            }
-        }
+// ============================================
+// DOCUMENT READY
+// ============================================
 
-        // ============================================
-        // SIDEBAR MOBILE FUNCTIONS
-        // ============================================
+document.addEventListener('DOMContentLoaded', function() {
+    
+    // ==========================================
+    // SIDEBAR TOGGLE - EVENT DELEGATION
+    // ==========================================
+    document.addEventListener('click', function(e) {
+        // Tangkap klik pada tombol toggle sidebar (pakai class bukan ID)
+        const toggleBtn = e.target.closest('.sidebar-toggle-btn, [data-toggle-sidebar], #sidebarToggle');
         
-        function closeMobileSidebar() {
-            if (window.innerWidth < 768) {
-                const sidebar = document.getElementById('sidebar');
-                const overlay = document.getElementById('sidebarOverlay');
-                
-                if (sidebar) sidebar.classList.remove('show');
-                if (overlay) overlay.classList.remove('active');
+        if (toggleBtn) {
+            e.preventDefault();
+            e.stopPropagation();
+            toggleSidebar();
+            return false;
+        }
+        
+        // Tangkap klik pada overlay
+        if (e.target.id === 'sidebarOverlay' || e.target.classList.contains('sidebar-overlay')) {
+            e.preventDefault();
+            closeMobileSidebar();
+            return false;
+        }
+    });
+
+    // ==========================================
+    // SECTION NAVIGATION
+    // ==========================================
+    const sidebarNav = document.getElementById('sidebarNav');
+    if (sidebarNav) {
+        sidebarNav.addEventListener('click', function(e) {
+            const link = e.target.closest('[data-section]');
+            if (!link) return;
+            e.preventDefault();
+            
+            this.querySelectorAll('.nav-link').forEach(l => l.classList.remove('active'));
+            link.classList.add('active');
+            
+            document.querySelectorAll('.dashboard-section').forEach(s => s.classList.remove('active'));
+            const targetSection = document.getElementById(link.dataset.section);
+            if (targetSection) targetSection.classList.add('active');
+            
+            setTimeout(closeMobileSidebar, 150);
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        });
+    }
+
+    // ==========================================
+    // WINDOW RESIZE HANDLER
+    // ==========================================
+    let resizeTimer;
+    window.addEventListener('resize', function() {
+        clearTimeout(resizeTimer);
+        resizeTimer = setTimeout(function() {
+            const sidebar = document.getElementById('sidebar');
+            const overlay = document.getElementById('sidebarOverlay');
+            
+            if (window.innerWidth >= 768) {
+                if (sidebar) {
+                    sidebar.classList.remove('show');
+                }
+                if (overlay) {
+                    overlay.classList.remove('active');
+                }
                 document.body.style.overflow = '';
             }
-        }
+        }, 250);
+    });
 
-        function openMobileSidebar() {
-            if (window.innerWidth < 768) {
-                const sidebar = document.getElementById('sidebar');
-                const overlay = document.getElementById('sidebarOverlay');
-                
-                if (sidebar) sidebar.classList.add('show');
-                if (overlay) overlay.classList.add('active');
-                document.body.style.overflow = 'hidden';
+    // ==========================================
+    // FLASH MESSAGES
+    // ==========================================
+    @if (session('success'))
+    setTimeout(function() { 
+        if (typeof showSuccessModal === 'function') {
+            showSuccessModal("{{ session('success') }}"); 
+        }
+    }, 300);
+    @endif
+    
+    @if (session('error'))
+    setTimeout(function() { 
+        if (typeof showErrorModal === 'function') {
+            showErrorModal("{{ session('error') }}"); 
+        }
+    }, 300);
+    @endif
+    
+    @if ($errors->any())
+    setTimeout(function() { 
+        if (typeof showErrorModal === 'function') {
+            showErrorModal("{{ $errors->first() }}"); 
+        }
+    }, 300);
+    @endif
+
+    // ==========================================
+    // PROFILE FORM
+    // ==========================================
+    const saveProfileBtn = document.getElementById('saveProfile');
+    if (saveProfileBtn) {
+        saveProfileBtn.addEventListener('click', function() {
+            const formData = new FormData();
+            formData.append('full_name', document.getElementById('fullName')?.value || '');
+            formData.append('phone', document.getElementById('phone')?.value || '');
+            formData.append('department', document.getElementById('department')?.value || '');
+            formData.append('bio', document.getElementById('bio')?.value || '');
+            
+            const profilePicture = document.getElementById('profilePicture');
+            if (profilePicture && profilePicture.files[0]) {
+                formData.append('profile_picture', profilePicture.files[0]);
             }
-        }
 
-        function toggleSidebar() {
-            if (window.innerWidth < 768) {
-                const sidebar = document.getElementById('sidebar');
-                
-                if (sidebar && sidebar.classList.contains('show')) {
-                    closeMobileSidebar();
+            fetch('/profile', {
+                method: 'POST',
+                body: formData,
+                headers: {
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content')
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success || response.ok) {
+                    showSuccessModal('Profile berhasil diupdate!');
+                    setTimeout(() => location.reload(), 1000);
                 } else {
-                    openMobileSidebar();
+                    showErrorModal(data.message || 'Gagal mengupdate profile');
                 }
-            } else {
-                // Desktop - toggle collapsed
-                const sidebar = document.getElementById('sidebar');
-                const mainContent = document.getElementById('mainContentWrapper');
-                
-                if (sidebar) sidebar.classList.toggle('collapsed');
-                if (mainContent) mainContent.classList.toggle('expanded');
-                
-                setTimeout(() => window.dispatchEvent(new Event('resize')), 310);
-            }
-        }
-
-        // ============================================
-        // DOCUMENT READY
-        // ============================================
-        
-        document.addEventListener('DOMContentLoaded', function() {
-            // Handle sidebar toggle clicks
-            document.addEventListener('click', function(e) {
-                // Tombol toggle sidebar
-                const toggleBtn = e.target.closest('#sidebarToggle, .sidebar-toggle-btn');
-                
-                if (toggleBtn) {
-                    e.preventDefault();
-                    e.stopPropagation();
-                    toggleSidebar();
-                    return;
-                }
-                
-                // Klik overlay untuk menutup sidebar
-                if (e.target.id === 'sidebarOverlay' || e.target.classList.contains('sidebar-overlay')) {
-                    e.preventDefault();
-                    closeMobileSidebar();
-                    return;
-                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                showErrorModal('Terjadi kesalahan saat mengupdate profile');
             });
-
-            // Section Navigation
-            const sidebarNav = document.getElementById('sidebarNav');
-            if (sidebarNav) {
-                sidebarNav.addEventListener('click', function(e) {
-                    const link = e.target.closest('[data-section]');
-                    if (!link) return;
-                    e.preventDefault();
-                    
-                    // Update active state
-                    this.querySelectorAll('.nav-link').forEach(l => l.classList.remove('active'));
-                    link.classList.add('active');
-                    
-                    // Show selected section
-                    document.querySelectorAll('.dashboard-section').forEach(s => s.classList.remove('active'));
-                    const targetSection = document.getElementById(link.dataset.section);
-                    if (targetSection) targetSection.classList.add('active');
-                    
-                    // Close sidebar on mobile
-                    closeMobileSidebar();
-                    
-                    // Scroll to top
-                    window.scrollTo({ top: 0, behavior: 'smooth' });
-                });
-            }
-
-            // Handle window resize
-            let resizeTimer;
-            window.addEventListener('resize', function() {
-                clearTimeout(resizeTimer);
-                resizeTimer = setTimeout(function() {
-                    if (window.innerWidth >= 768) {
-                        const sidebar = document.getElementById('sidebar');
-                        const overlay = document.getElementById('sidebarOverlay');
-                        
-                        if (sidebar) {
-                            sidebar.classList.remove('show');
-                        }
-                        if (overlay) {
-                            overlay.classList.remove('active');
-                        }
-                        document.body.style.overflow = '';
-                    }
-                }, 250);
-            });
-
-            // Flash Messages
-            @if (session('success'))
-            if (typeof showSuccessModal === 'function') {
-                setTimeout(function() { showSuccessModal("{{ session('success') }}"); }, 300);
-            }
-            @endif
-            
-            @if (session('error'))
-            if (typeof showErrorModal === 'function') {
-                setTimeout(function() { showErrorModal("{{ session('error') }}"); }, 300);
-            }
-            @endif
-            
-            @if ($errors->any())
-            if (typeof showErrorModal === 'function') {
-                setTimeout(function() { showErrorModal("{{ $errors->first() }}"); }, 300);
-            }
-            @endif
         });
-    </script>
+    }
+
+    // ==========================================
+    // SURAT MASUK - TAMBAH BARU
+    // ==========================================
+    const formSuratBaru = document.getElementById('formSuratBaru');
+    if (formSuratBaru) {
+        formSuratBaru.addEventListener('submit', function(e) {
+            e.preventDefault();
+            if (this.submitting) return;
+            this.submitting = true;
+
+            const submitBtn = this.querySelector('button[type="submit"]');
+            if (submitBtn) submitBtn.disabled = true;
+
+            const formData = new FormData(this);
+
+            fetch(this.action, {
+                method: 'POST',
+                body: formData,
+                headers: {
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content'),
+                    'Accept': 'application/json'
+                }
+            })
+            .then(async response => {
+                if (response.ok) {
+                    showSuccessModal('Surat masuk berhasil disimpan!');
+                    bootstrap.Modal.getInstance(document.getElementById('modalSuratBaru'))?.hide();
+                    this.reset();
+                    setTimeout(() => location.reload(), 1000);
+                } else if (response.status === 422) {
+                    const errorData = await response.json();
+                    const errors = errorData.errors;
+                    let errorMessages = 'Validasi gagal:\n';
+                    for (const key in errors) {
+                        if (errors.hasOwnProperty(key)) {
+                            errorMessages += '- ' + errors[key].join(', ') + '\n';
+                        }
+                    }
+                    alert(errorMessages);
+                } else {
+                    alert('Terjadi kesalahan. Status: ' + response.status);
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('Tidak dapat terhubung ke server.');
+            })
+            .finally(() => {
+                this.submitting = false;
+                if (submitBtn) submitBtn.disabled = false;
+            });
+        });
+    }
+
+    // ==========================================
+    // SURAT MASUK - EDIT
+    // ==========================================
+    window.editSuratMasuk = function(id) {
+        fetch('/api/surat-masuk/' + id, {
+            headers: { 'Accept': 'application/json' }
+        })
+        .then(response => response.json().catch(() => ({})))
+        .then(data => {
+            if (!data || !data.success || !data.surat) {
+                alert('Gagal mengambil data surat masuk');
+                return;
+            }
+
+            const surat = data.surat;
+            const modalElement = document.getElementById('modalEditSuratMasuk');
+            if (!modalElement) {
+                alert('Modal edit tidak ditemukan');
+                return;
+            }
+
+            const setValue = (elId, value) => {
+                const el = document.getElementById(elId);
+                if (el) el.value = value ?? '';
+            };
+
+            setValue('editSuratId', surat.id);
+            setValue('editSuratNomor', surat.nomor_surat);
+            setValue('editSuratDivisi', surat.divisi_id);
+            setValue('editSuratTanggal', surat.tanggal);
+            setValue('editSuratPerihal', surat.perihal);
+            setValue('editSuratPengirim', surat.pengirim);
+            setValue('edit_instruksi_disposisi', surat.instruksi_disposisi);
+            setValue('edit_instruksi_tambahan', surat.instruksi_tambahan);
+
+            new bootstrap.Modal(modalElement).show();
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('Terjadi kesalahan saat mengambil data surat masuk');
+        });
+    };
+
+    // Form Edit Surat Masuk
+    const formEditSuratMasuk = document.getElementById('formEditSuratMasuk');
+    if (formEditSuratMasuk) {
+        formEditSuratMasuk.addEventListener('submit', function(e) {
+            e.preventDefault();
+            const id = document.getElementById('editSuratId').value;
+            const formData = new FormData(this);
+            formData.append('_method', 'PUT');
+
+            fetch('/surat-masuk/' + id, {
+                method: 'POST',
+                body: formData,
+                headers: {
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content'),
+                    'Accept': 'application/json'
+                }
+            })
+            .then(async response => {
+                if (response.ok) {
+                    showSuccessModal('Surat masuk berhasil diperbarui!');
+                    bootstrap.Modal.getInstance(document.getElementById('modalEditSuratMasuk'))?.hide();
+                    setTimeout(() => location.reload(), 1000);
+                } else if (response.status === 422) {
+                    const errorData = await response.json();
+                    let errorMessages = 'Validasi gagal:\n';
+                    for (const key in errorData.errors) {
+                        errorMessages += '- ' + errorData.errors[key].join(', ') + '\n';
+                    }
+                    alert(errorMessages);
+                } else {
+                    alert('Terjadi kesalahan. Status: ' + response.status);
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('Terjadi kesalahan saat memperbarui surat masuk');
+            });
+        });
+    }
+
+    // ==========================================
+    // SURAT MASUK - HAPUS
+    // ==========================================
+    window.hapusSuratMasuk = function(id, event) {
+        if (confirm('Anda yakin ingin menghapus surat masuk ini?')) {
+            fetch('/surat-masuk/' + id, {
+                method: 'POST',
+                body: new URLSearchParams({ '_method': 'DELETE' }),
+                headers: {
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content'),
+                    'Accept': 'application/json'
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    showSuccessModal('Surat masuk berhasil dihapus!');
+                    const row = event?.target?.closest('tr');
+                    if (row) row.remove();
+                    setTimeout(() => location.reload(), 1000);
+                } else {
+                    alert('Gagal menghapus: ' + (data.message || 'Terjadi kesalahan'));
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('Terjadi kesalahan saat menghapus surat.');
+            });
+        }
+    };
+
+    // ==========================================
+    // SURAT KELUAR - TAMBAH BARU
+    // ==========================================
+    const formSuratKeluarBaru = document.getElementById('formSuratKeluarBaru');
+    if (formSuratKeluarBaru) {
+        formSuratKeluarBaru.addEventListener('submit', function(e) {
+            e.preventDefault();
+            const formData = new FormData(this);
+
+            fetch(this.action, {
+                method: 'POST',
+                body: formData,
+                headers: {
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content'),
+                    'Accept': 'application/json'
+                }
+            })
+        .then(async response => {
+            if (response.ok) {
+                const data = await response.json();
+                showSuccessModal('Surat keluar berhasil ditambahkan!');
+                bootstrap.Modal.getInstance(document.getElementById('modalSuratKeluarBaru'))?.hide();
+                this.reset();
+                setTimeout(() => location.reload(), 1000);
+            } else if (response.status === 422) {
+                const errorData = await response.json();
+                let errorMessage = 'Validasi gagal:\n\n';
+                if (errorData.errors) {
+                    for (const field in errorData.errors) {
+                        errorMessage += '- ' + field + ': ' + errorData.errors[field].join(', ') + '\n';
+                    }
+                } else {
+                    errorMessage += errorData.message || 'Terjadi kesalahan.';
+                }
+                alert(errorMessage);
+            } else {
+                alert('Gagal menyimpan surat keluar. Status: ' + response.status);
+            }
+        })
+            .catch(error => {
+                console.error('Error:', error);
+                showErrorModal('Terjadi kesalahan saat menyimpan surat keluar');
+            });
+        });
+    }
+
+    // ==========================================
+    // SURAT KELUAR - EDIT
+    // ==========================================
+    window.editSuratKeluar = function(id) {
+        fetch('/surat-keluar/' + id, {
+            headers: { 'Accept': 'application/json' }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (!data.success || !data.surat) {
+                alert('Gagal mengambil data surat keluar');
+                return;
+            }
+
+            const surat = data.surat;
+            const modalElement = document.getElementById('modalEditSuratKeluar');
+            if (!modalElement) {
+                alert('Modal edit tidak ditemukan');
+                return;
+            }
+
+            const setValue = (elId, value) => {
+                const el = document.getElementById(elId);
+                if (el) el.value = value ?? '';
+            };
+
+            setValue('editKeluarId', surat.id);
+            setValue('editKeluarNomor', surat.nomor_surat);
+            setValue('editKeluarJudul', surat.judul_laporan);
+            setValue('editKeluarPenerima', surat.penerima);
+            setValue('editKeluarDivisi', surat.divisi_id);
+            setValue('editKeluarTanggal', surat.tanggal_kirim);
+            setValue('editKeluarPerihal', surat.perihal);
+            setValue('editKeluarStatus', surat.status);
+
+            new bootstrap.Modal(modalElement).show();
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('Terjadi kesalahan saat mengambil data surat keluar');
+        });
+    };
+
+    // Form Edit Surat Keluar
+    const formEditSuratKeluar = document.getElementById('formEditSuratKeluar');
+    if (formEditSuratKeluar) {
+        formEditSuratKeluar.addEventListener('submit', function(e) {
+            e.preventDefault();
+            const id = document.getElementById('editKeluarId')?.value;
+            if (!id) return;
+
+            const formData = new FormData(this);
+            formData.append('_method', 'PUT');
+
+            fetch('/surat-keluar/' + id, {
+                method: 'POST',
+                body: formData,
+                headers: {
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content'),
+                    'Accept': 'application/json'
+                }
+            })
+            .then(async response => {
+                if (response.ok) {
+                    showSuccessModal('Surat keluar berhasil diperbarui!');
+                    bootstrap.Modal.getInstance(document.getElementById('modalEditSuratKeluar'))?.hide();
+                    setTimeout(() => location.reload(), 1000);
+                } else if (response.status === 422) {
+                    const errorData = await response.json();
+                    let errorMessages = 'Validasi gagal:\n';
+                    for (const key in errorData.errors) {
+                        errorMessages += '- ' + errorData.errors[key].join(', ') + '\n';
+                    }
+                    alert(errorMessages);
+                } else {
+                    alert('Terjadi kesalahan saat memperbarui surat keluar');
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('Terjadi kesalahan saat memperbarui surat keluar');
+            });
+        });
+    }
+
+    // ==========================================
+    // SURAT KELUAR - HAPUS
+    // ==========================================
+    window.hapusSuratKeluar = function(id) {
+        if (confirm('Apakah Anda yakin ingin menghapus surat keluar ini?')) {
+            const formData = new FormData();
+            formData.append('_method', 'DELETE');
+
+            fetch('/surat-keluar/' + id, {
+                method: 'POST',
+                body: formData,
+                headers: {
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content'),
+                    'Accept': 'application/json'
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    showSuccessModal('Surat keluar berhasil dihapus!');
+                    setTimeout(() => location.reload(), 1000);
+                } else {
+                    alert('Gagal menghapus: ' + (data.message || 'Terjadi kesalahan'));
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('Terjadi kesalahan saat menghapus surat keluar');
+            });
+        }
+    };
+
+    // ==========================================
+    // PENGGUNA - EDIT
+    // ==========================================
+    window.editPengguna = function(id) {
+        fetch('/users/' + id, {
+            headers: { 'Accept': 'application/json' }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success && data.user) {
+                const user = data.user;
+                const form = document.getElementById('editPenggunaForm');
+                const modalElement = document.getElementById('editPenggunaModal');
+                
+                if (!form || !modalElement) return;
+
+                form.action = '/users/' + user.id;
+                
+                const setValue = (elId, value) => {
+                    const el = document.getElementById(elId);
+                    if (el) el.value = value ?? '';
+                };
+
+                setValue('editPenggunaId', user.id);
+                setValue('editUsername', user.name);
+                setValue('editFullName', user.full_name || user.name);
+                setValue('editEmail', user.email);
+                setValue('editRole', user.role);
+
+                const divisiContainer = document.getElementById('editDivisiContainer');
+                if (divisiContainer) {
+                    divisiContainer.style.display = user.role === 'admin' ? 'none' : 'block';
+                    if (user.role !== 'admin') {
+                        setValue('editDivisi', user.divisi_id);
+                    }
+                }
+
+                new bootstrap.Modal(modalElement).show();
+            } else {
+                alert('Gagal mengambil data pengguna');
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('Terjadi kesalahan saat mengambil data pengguna');
+        });
+    };
+
+    // ==========================================
+    // PENGGUNA - HAPUS
+    // ==========================================
+    window.hapusPengguna = function(id) {
+        if (confirm('Apakah Anda yakin ingin menghapus pengguna ini?')) {
+            const formData = new FormData();
+            formData.append('_method', 'DELETE');
+
+            fetch('/users/' + id, {
+                method: 'POST',
+                body: formData,
+                headers: {
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content'),
+                    'Accept': 'application/json'
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    showSuccessModal('Pengguna berhasil dihapus!');
+                    setTimeout(() => location.reload(), 1000);
+                } else {
+                    alert('Gagal menghapus: ' + (data.message || 'Terjadi kesalahan'));
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('Terjadi kesalahan saat menghapus pengguna');
+            });
+        }
+    };
+
+    // ==========================================
+    // FORM PENGGUNA
+    // ==========================================
+    const penggunaForm = document.getElementById('penggunaForm');
+    if (penggunaForm) {
+        penggunaForm.addEventListener('submit', function(e) {
+            e.preventDefault();
+            const formData = new FormData(this);
+
+            fetch(this.action, {
+                method: 'POST',
+                body: formData,
+                headers: {
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content')
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    showSuccessModal('Pengguna berhasil ditambahkan!');
+                    bootstrap.Modal.getInstance(document.getElementById('penggunaModal'))?.hide();
+                    setTimeout(() => location.reload(), 1000);
+                } else {
+                    alert('Error: ' + (data.message || 'Terjadi kesalahan'));
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('Terjadi kesalahan saat menambahkan pengguna');
+            });
+        });
+    }
+
+    const editPenggunaForm = document.getElementById('editPenggunaForm');
+    if (editPenggunaForm) {
+        editPenggunaForm.addEventListener('submit', function(e) {
+            e.preventDefault();
+            const formData = new FormData(this);
+
+            fetch(this.action, {
+                method: 'POST',
+                body: formData,
+                headers: {
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content'),
+                    'Accept': 'application/json'
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    showSuccessModal('Pengguna berhasil diperbarui!');
+                    bootstrap.Modal.getInstance(document.getElementById('editPenggunaModal'))?.hide();
+                    setTimeout(() => location.reload(), 1000);
+                } else {
+                    let errorMessage = 'Gagal memperbarui pengguna: ';
+                    if (data.message) {
+                        errorMessage += data.message;
+                    } else if (data.errors) {
+                        errorMessage += Object.values(data.errors).flat().join(' ');
+                    } else {
+                        errorMessage += 'Terjadi kesalahan yang tidak diketahui.';
+                    }
+                    alert(errorMessage);
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('Terjadi kesalahan saat memperbarui pengguna');
+            });
+        });
+    }
+
+    // ==========================================
+    // FORM LAPORAN & ARSIP
+    // ==========================================
+    const uploadLaporanForm = document.getElementById('uploadLaporanForm');
+    if (uploadLaporanForm) {
+        uploadLaporanForm.addEventListener('submit', function(e) {
+            e.preventDefault();
+            const formData = new FormData(this);
+
+            fetch(this.action, {
+                method: 'POST',
+                body: formData,
+                headers: {
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content')
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    showSuccessModal('Laporan berhasil diupload!');
+                    bootstrap.Modal.getInstance(document.getElementById('uploadLaporanModal'))?.hide();
+                    setTimeout(() => location.reload(), 1000);
+                } else {
+                    alert('Error: ' + (data.message || 'Terjadi kesalahan'));
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('Terjadi kesalahan saat mengupload laporan');
+            });
+        });
+    }
+
+    const inputLaporanForm = document.getElementById('inputLaporanForm');
+    if (inputLaporanForm) {
+        inputLaporanForm.addEventListener('submit', function(e) {
+            e.preventDefault();
+            const formData = new FormData(this);
+
+            fetch(this.action, {
+                method: 'POST',
+                body: formData,
+                headers: {
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content')
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    showSuccessModal('Laporan berhasil disimpan!');
+                    bootstrap.Modal.getInstance(document.getElementById('inputLaporanModal'))?.hide();
+                    setTimeout(() => location.reload(), 1000);
+                } else {
+                    alert('Error: ' + (data.message || 'Terjadi kesalahan'));
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('Terjadi kesalahan saat menyimpan laporan');
+            });
+        });
+    }
+
+    // ==========================================
+    // EVENT DELEGATION - TABEL PENGGUNA
+    // ==========================================
+    document.addEventListener('click', function(event) {
+        const target = event.target.closest('button');
+        if (!target) return;
+
+        if (target.classList.contains('btn-edit-pengguna')) {
+            editPengguna(target.dataset.userId);
+        } else if (target.classList.contains('btn-hapus-pengguna')) {
+            hapusPengguna(target.dataset.userId);
+        }
+    });
+
+});
+</script>
 </body>
 </html>

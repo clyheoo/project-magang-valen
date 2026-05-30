@@ -421,6 +421,8 @@
                 margin-left: -280px;
                 transition: margin-left 0.3s ease;
                 box-shadow: 4px 0 15px rgba(0,0,0,0.2);
+                display: block !important;
+
             }
             
             .sidebar.show {
@@ -784,7 +786,7 @@
         
     <div class="d-flex">
         <!-- Sidebar -->
-        <div class="d-none d-md-block sidebar" id="sidebar">
+        <div class="sidebar" id="sidebar">
                 <div class="position-sticky pt-3">
                     <div class="sidebar-header d-flex flex-column align-items-center px-3 py-2 mb-3">
                         <img src="https://z-cdn-media.chatglm.cn/files/4d8c4a95-b906-43a0-a624-ba43cb3d6ab4_logo%20cabdin.png?auth_key=1863697320-0546550f413245d6a2c0b7ff7c9f44d2-0-1cdfec829aefd5795c821dc2fedd8142" alt="Logo" class="sidebar-logo mb-2">

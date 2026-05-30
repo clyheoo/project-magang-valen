@@ -623,7 +623,7 @@
                 margin-bottom: 0;
             }
 
-                        /* ============================================
+             /* ============================================
                CHARTS, AKTIVITAS & RINGKASAN - COMPACT
                ============================================ */
             
@@ -851,6 +851,34 @@
                 display: block;
                 width: fit-content;
             }
+
+            /* ============================================
+            ICON FORMAT DI KOLOM TABEL
+            ============================================ */
+            .table td .fa-lg {
+                font-size: 1rem !important;
+            }
+
+            .table .fa-file-pdf,
+            .table .fa-file-word,
+            .table .fa-file-excel,
+            .table .fa-file,
+            .table .fa-file-alt {
+                display: inline-block;
+                width: 24px;
+                text-align: center;
+                font-size: 1rem !important;
+            }
+
+            .table th[scope="col"]:last-child,
+            .table td:has(.fa-file-pdf),
+            .table td:has(.fa-file-word),
+            .table td:has(.fa-file-excel),
+            .table td:has(.fa-file),
+            .table td:has(.fa-file-alt) {
+                white-space: nowrap;
+                padding: 8px 6px !important;
+            }
         }
 
         /* ============================================
@@ -898,7 +926,11 @@
                 padding: 1px 4px;
             }
         }
-
+        /* Batasi ukuran icon di dalam tabel */
+        .table td i[class*="fa-file"] {
+            font-size: 1rem !important;
+            display: inline-block;
+        }
         @stack('styles')
     </style>
 </head>

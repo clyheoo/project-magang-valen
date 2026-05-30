@@ -508,7 +508,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 filteredData.forEach(function(item) {
                     var tanggal = item.tanggal ? new Date(item.tanggal).toLocaleDateString('id-ID') : '-';
                     var divisiNama = item.divisi && item.divisi.nama_divisi ? item.divisi.nama_divisi : (item.nama_divisi || 'N/A');
-                    var icon = getFileIconClass(item.format_file_id, 'fa-lg', item.format_file && item.format_file.nama_format ? item.format_file.nama_format : '');
+                    var icon = getFileIconClass(item.format_file_id, '', item.format_file && item.format_file.nama_format ? item.format_file.nama_format : '');
                     var statuses = { baru: 'warning', diterima: 'success', ditolak: 'danger', diproses: 'info', selesai: 'primary' };
                     var badge = '<span class="badge bg-' + (statuses[item.status] || 'secondary') + '">' + item.status + '</span>';
                     var canEdit = String(item.created_by) === String(userId);

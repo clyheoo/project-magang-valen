@@ -584,6 +584,63 @@
                 font-size: 0.8rem;
                 margin-bottom: 0;
             }
+
+                        /* ============================================
+               CHARTS, AKTIVITAS & RINGKASAN - COMPACT
+               ============================================ */
+            
+            /* Header chart lebih padat */
+            .card-header {
+                padding: 8px 12px !important;
+            }
+            
+            .card-header h5 {
+                font-size: 0.8rem;
+                margin-bottom: 0;
+            }
+            
+            /* Chart container lebih pendek */
+            .chart-container {
+                height: 170px !important;
+                min-height: 170px;
+            }
+            
+            /* List Aktivitas Terbaru */
+            .list-group-item {
+                padding: 8px 10px !important;
+            }
+            
+            .list-group-item .d-flex {
+                gap: 8px;
+            }
+            
+            .list-group-item .me-3 {
+                margin-right: 0 !important;
+            }
+            
+            .list-group-item .fw-bold {
+                font-size: 0.78rem;
+                line-height: 1.3;
+            }
+            
+            .list-group-item small {
+                font-size: 0.68rem;
+            }
+            
+            /* Ringkasan Sistem */
+            .card-body > hr {
+                margin: 8px 0 !important;
+                opacity: 0.5;
+            }
+            
+            .row.text-center h4 {
+                font-size: 1.1rem !important;
+                margin-bottom: 2px !important;
+            }
+            
+            .row.text-center small {
+                font-size: 0.7rem !important;
+            }
             
             /* ============================================
                TABLE
@@ -782,8 +839,16 @@
             }
             
             .chart-container {
-                height: 150px !important;
-                min-height: 150px;
+                height: 140px !important;
+                min-height: 140px;
+            }
+            
+            .list-group-item .fw-bold {
+                font-size: 0.72rem;
+            }
+            
+            .row.text-center h4 {
+                font-size: 1rem !important;
             }
             
             .dashboard-section h1.h2 {

@@ -3,29 +3,29 @@
         <button class="btn btn-outline-secondary me-3 sidebar-toggle-btn" type="button"><i class="fas fa-bars"></i></button>
         <h1 class="h2">Surat Keluar</h1>
     </div>
-    <div class="d-flex flex-column flex-md-row align-items-stretch align-items-md-center gap-2 mt-2 mt-md-0" style="gap: 10px;">
-        <div class="input-group input-group-sm" style="width: 100%; max-width: 320px; height: 38px;">
-            <input type="text" name="search" class="form-control" id="searchSuratKeluar" placeholder="Cari penerima, judul, perihal..." style="height: 38px;">
-            <button class="btn btn-outline-secondary d-flex align-items-center justify-content-center" type="button" id="btnSearchSuratKeluar" style="height: 38px; width: 38px;"><i class="fas fa-search"></i></button>
-        </div>
-        <div class="d-flex flex-column flex-md-row gap-2" style="gap: 10px;">
-            <select name="divisi_id" class="form-select form-select-sm" id="filterDivisiKeluar" style="width: 100%; height: 38px; padding: 0 0.75rem;">
-                <option value="">Semua Divisi</option>
-                @foreach($divisi as $d)
-                    <option value="{{ $d->id }}">{{ $d->nama_divisi }}</option>
-                @endforeach
-            </select>
-            <select name="status" class="form-select form-select-sm" id="filterStatusKeluar" style="width: 100%; height: 38px; padding: 0 0.75rem;">
-                <option value="">Semua Status</option>
-                <option value="draft">Draft</option>
-                <option value="dikirim">Dikirim</option>
-                <option value="diterima">Diterima</option>
-            </select>
-        </div>
+    
+    <!-- Search Bar -->
+    <div class="input-group input-group-sm mt-2 mt-md-0" style="height: 38px;">
+        <input type="text" name="search" class="form-control" id="searchSuratKeluar" placeholder="Cari penerima, judul, perihal..." style="height: 38px;">
+        <button class="btn btn-outline-secondary d-flex align-items-center justify-content-center" type="button" id="btnSearchSuratKeluar" style="height: 38px; width: 38px;"><i class="fas fa-search"></i></button>
     </div>
-    <div class="btn-toolbar w-100 mt-2 mt-md-0">
-        <button class="btn btn-success w-100" id="btnSuratKeluarBaru" data-bs-toggle="modal" data-bs-target="#modalSuratKeluarBaru">
-            <i class="fas fa-plus me-1"></i> Buat Surat Keluar
+    
+    <!-- Dropdowns & Tombol Aksi (Di satu baris) -->
+    <div class="d-flex align-items-stretch gap-2 mt-2 mt-md-0 w-100">
+        <select name="divisi_id" class="form-select form-select-sm flex-grow-1" id="filterDivisiKeluar" style="height: 38px;">
+            <option value="">Semua Divisi</option>
+            @foreach($divisi as $d)
+                <option value="{{ $d->id }}">{{ $d->nama_divisi }}</option>
+            @endforeach
+        </select>
+        <select name="status" class="form-select form-select-sm flex-grow-1" id="filterStatusKeluar" style="height: 38px;">
+            <option value="">Semua Status</option>
+            <option value="draft">Draft</option>
+            <option value="dikirim">Dikirim</option>
+            <option value="diterima">Diterima</option>
+        </select>
+        <button class="btn btn-success text-nowrap" id="btnSuratKeluarBaru" data-bs-toggle="modal" data-bs-target="#modalSuratKeluarBaru" style="height: 38px;">
+            <i class="fas fa-plus me-1"></i> Buat Surat
         </button>
     </div>
 </div>

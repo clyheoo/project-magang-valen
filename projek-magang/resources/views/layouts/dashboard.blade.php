@@ -383,14 +383,11 @@
            MAIN CONTENT WRAPPER
            ============================================ */
         .main-content-wrapper { 
-            margin-left: 250px; 
-            transition: margin-left 0.3s ease; 
-            width: calc(100% - 250px); 
+            transition: all 0.3s ease; 
         }
-        
+
         .main-content-wrapper.expanded { 
             margin-left: 0; 
-            width: 100% !important; 
         }
 
         .filter-select { 
@@ -856,7 +853,7 @@
             </div>
 
             <!-- Main Content -->
-            <div class="main-content-wrapper px-4 py-4 flex-grow-1" id="mainContentWrapper">
+            <div class="main-content-wrapper ps-3 pe-4 py-4 flex-grow-1" id="mainContentWrapper">
                 @yield('content')
             </div>
         </div>

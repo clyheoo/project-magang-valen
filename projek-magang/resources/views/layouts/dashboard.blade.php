@@ -422,45 +422,45 @@
                 transition: margin-left 0.3s ease;
                 box-shadow: 4px 0 15px rgba(0,0,0,0.2);
                 display: block !important;
-
             }
             
             .sidebar.show {
                 margin-left: 0;
             }
             
-            /* Main content - full width */
+            /* Main content - full width dengan padding minimal */
             .main-content-wrapper {
                 margin-left: 0 !important;
                 width: 100% !important;
-                padding-left: 12px !important;
-                padding-right: 12px !important;
-                padding-top: 12px !important;
-                padding-bottom: 12px !important;
+                padding-left: 10px !important;
+                padding-right: 10px !important;
+                padding-top: 8px !important;
+                padding-bottom: 8px !important;
             }
             
-            /* Section headers - stack vertically */
+            /* Section headers */
             .dashboard-section > .d-flex.justify-content-between,
             .dashboard-section > .d-flex.justify-content-between.flex-wrap {
                 flex-direction: column !important;
                 align-items: stretch !important;
-                gap: 10px;
+                gap: 8px;
+                margin-bottom: 12px !important;
+                padding-bottom: 8px !important;
             }
             
             .dashboard-section > .d-flex.justify-content-between > .d-flex.align-items-center {
                 flex-shrink: 0;
             }
             
-            /* Filter controls container - stack and full width */
+            /* Filter controls */
             .dashboard-section .d-flex.gap-2,
             .dashboard-section .d-flex[style*="gap: 10px"],
             .dashboard-section .d-flex[style*="gap:10px"] {
                 flex-direction: column !important;
                 width: 100% !important;
-                gap: 8px !important;
+                gap: 6px !important;
             }
             
-            /* Input groups - full width */
             .input-group[style*="width:280px"],
             .input-group[style*="width: 280px"],
             .input-group[style*="width:320px"],
@@ -468,7 +468,6 @@
                 width: 100% !important;
             }
             
-            /* Select filters - full width */
             .form-select[style*="width:160px"],
             .form-select[style*="width: 160px"],
             .form-select[style*="width:150px"],
@@ -480,7 +479,6 @@
                 width: 100% !important;
             }
             
-            /* Action buttons - full width */
             .btn-toolbar {
                 width: 100%;
             }
@@ -492,72 +490,128 @@
                 justify-content: center;
             }
             
-            /* KPI Cards - 2 columns */
-            .row.g-3 > [class*="col-xl-3"] {
-                flex: 0 0 calc(50% - 6px);
-                max-width: calc(50% - 6px);
+            /* ============================================
+               KPI CARDS - FORMAT 2x2 COMPACT
+               ============================================ */
+            .row.g-3.mb-4,
+            .row.g-3.mb-3 {
+                --bs-gutter-x: 8px;
+                --bs-gutter-y: 8px;
+                margin-bottom: 10px !important;
             }
             
-            .row.g-3 > [class*="col-md-3"] {
-                flex: 0 0 calc(50% - 6px);
-                max-width: calc(50% - 6px);
+            /* Force semua kolom KPI jadi 50% */
+            .row.g-3 > [class*="col-xl-3"],
+            .row.g-3 > [class*="col-md-3"],
+            .row.g-3 > [class*="col-xl-4"],
+            .row.g-3 > [class*="col-md-4"],
+            .row.g-3 > [class*="col-md-6"] {
+                flex: 0 0 calc(50% - 4px) !important;
+                max-width: calc(50% - 4px) !important;
             }
             
-            /* Tables - better scroll */
-            .table-responsive {
-                margin: 0 -12px;
-                padding: 0 12px;
-                overflow-x: auto;
-                -webkit-overflow-scrolling: touch;
+            /* Card compact styling */
+            .card {
+                margin-bottom: 8px !important;
+                border-radius: 8px;
             }
             
-            .table-responsive .table {
-                min-width: 650px;
-            }
-            
-            /* Chart containers - reduce height */
-            .chart-container {
-                height: 250px !important;
-                min-height: 250px;
-            }
-            
-            .chart-container[style*="height:320px"],
-            .chart-container[style*="height: 320px"] {
-                height: 250px !important;
-            }
-            
-            /* Cards - reduce padding, disable hover effect */
             .card:hover { 
                 transform: none; 
             }
             
             .card-body {
-                padding: 0.75rem;
+                padding: 10px 12px !important;
             }
             
+            /* KPI angka lebih kecil */
+            .kpi-card h3,
             .card-body h3 {
-                font-size: 1.25rem;
-                margin-bottom: 0.25rem;
+                font-size: 1.3rem;
+                margin-bottom: 0;
+                line-height: 1.2;
             }
             
-            .card-body h6 {
-                font-size: 0.75rem;
-                margin-bottom: 0.25rem;
+            /* KPI label lebih kecil */
+            .kpi-card h6,
+            .card-body h6.card-title {
+                font-size: 0.7rem;
+                margin-bottom: 2px;
             }
             
-            /* Badge - smaller */
+            /* Icon KPI lebih kecil */
+            .kpi-card .fa-2x,
+            .card-body .fa-2x {
+                font-size: 1.4rem !important;
+            }
+            
+            /* Badge di KPI */
+            .kpi-card .badge {
+                font-size: 0.55rem;
+                padding: 2px 6px;
+            }
+            
+            /* Badge group di Total Format */
+            .card-body .mt-2.d-flex.gap-2 {
+                flex-wrap: wrap;
+                gap: 3px !important;
+                margin-top: 6px !important;
+            }
+            
+            .card-body .mt-2.d-flex.gap-2 .badge {
+                font-size: 0.5rem;
+                padding: 1px 4px;
+            }
+            
+            /* ============================================
+               CHART - LEBIH COMPACT
+               ============================================ */
+            .chart-container {
+                height: 180px !important;
+                min-height: 180px;
+            }
+            
+            .chart-container[style*="height:320px"],
+            .chart-container[style*="height: 320px"] {
+                height: 180px !important;
+            }
+            
+            .card-header {
+                padding: 8px 12px !important;
+            }
+            
+            .card-header h5 {
+                font-size: 0.8rem;
+                margin-bottom: 0;
+            }
+            
+            /* ============================================
+               TABLE
+               ============================================ */
+            .table-responsive {
+                margin: 0 -10px;
+                padding: 0 10px;
+                overflow-x: auto;
+                -webkit-overflow-scrolling: touch;
+            }
+            
+            .table-responsive .table {
+                min-width: 600px;
+            }
+            
             .badge {
-                font-size: 0.6rem;
-                padding: 3px 6px;
+                font-size: 0.55rem;
+                padding: 2px 5px;
             }
             
-            /* Button groups */
             .btn-group-sm .btn {
-                padding: 0.25rem 0.5rem;
-                font-size: 0.75rem;
+                padding: 0.2rem 0.4rem;
+                font-size: 0.7rem;
             }
             
-            /* Modals - full screen */
+            /* ============================================
+               MODAL - FULL SCREEN
+               ============================================ */
             .modal-dialog {
                 margin: 0;
                 max-width: 100%;
@@ -576,14 +630,15 @@
                 -webkit-overflow-scrolling: touch;
             }
             
-            /* Detail section - stack columns */
+            /* ============================================
+               DETAIL SECTION
+               ============================================ */
             #suratDetailSection .col-md-8,
             #suratDetailSection .col-md-4 {
                 flex: 0 0 100%;
                 max-width: 100%;
             }
             
-            /* Update status container */
             #updateStatusContainer {
                 width: 100%;
             }
@@ -597,7 +652,9 @@
                 width: 100% !important;
             }
             
-            /* Email items - always show actions, stack layout */
+            /* ============================================
+               EMAIL/ITEM LIST
+               ============================================ */
             .email-item .email-actions {
                 opacity: 1 !important;
             }
@@ -605,116 +662,99 @@
             .email-item .d-flex.w-100 {
                 flex-direction: column !important;
                 align-items: flex-start !important;
-                gap: 10px;
+                gap: 8px;
             }
             
             .email-item .ms-3 {
                 margin-left: 0 !important;
-                margin-top: 0;
                 align-self: flex-end;
             }
             
-            /* Summary text center */
+            /* ============================================
+               SUMMARY & RINGKASAN
+               ============================================ */
             .row.text-center h4 {
-                font-size: 1.1rem;
+                font-size: 1rem;
             }
             
-            /* Truncate text */
+            .row.text-center small {
+                font-size: 0.7rem;
+            }
+            
             .text-truncate {
-                max-width: 100px !important;
+                max-width: 80px !important;
             }
             
-            /* File icon smaller */
             .fa-7x {
-                font-size: 4rem !important;
+                font-size: 3rem !important;
             }
             
-            /* Footer - stack */
+            /* ============================================
+               FOOTER
+               ============================================ */
+            .footer {
+                margin-top: 15px;
+                padding: 10px 0;
+            }
+            
             .footer .row > div {
                 text-align: center !important;
             }
             
             .footer .text-end {
                 text-align: center !important;
-                margin-top: 5px;
+                margin-top: 3px;
             }
             
-            /* Sidebar status box */
+            .footer p {
+                font-size: 0.75rem;
+            }
+            
+            /* ============================================
+               SIDEBAR STATUS BOX
+               ============================================ */
             .sidebar .mt-4.p-3 {
-                margin-top: 1rem !important;
-                padding: 0.75rem !important;
+                margin-top: 0.75rem !important;
+                padding: 0.6rem !important;
             }
             
             .sidebar .mt-4.p-3 h6 {
-                font-size: 0.85rem;
-                margin-bottom: 0.5rem;
+                font-size: 0.75rem;
+                margin-bottom: 0.4rem;
             }
             
             .sidebar .mt-4.p-3 .small {
-                font-size: 0.75rem;
+                font-size: 0.65rem;
             }
-        }
 
-        /* ============================================
-           RESPONSIVE - SMALL PHONES (max 575px)
-           ============================================ */
-        @media (max-width: 575.98px) {
-            /* KPI Cards - full width */
-            .row.g-3 > [class*="col-md-6"],
-            .row.g-3 > [class*="col-xl-3"],
-            .row.g-3 > [class*="col-md-3"] {
-                flex: 0 0 100%;
-                max-width: 100%;
+            /* ============================================
+               KPI CARD INTERNAL LAYOUT - COMPACT
+            ============================================ */
+            
+            /* Container flex agar icon di kanan tidak memaksa card memanjang */
+            .kpi-card .card-body,
+            .card-body .d-flex.justify-content-between {
+                gap: 8px;
             }
             
-            /* Smaller headings */
-            .dashboard-section h1.h2 {
-                font-size: 1.15rem;
+            /* Container kiri (teks) ambil sisa ruang */
+            .kpi-card .card-body .d-flex.justify-content-between > div:first-child,
+            .card-body .d-flex.justify-content-between > div:first-child {
+                flex: 1;
+                min-width: 0;
             }
             
-            .dashboard-section h2.h3 {
-                font-size: 1.1rem;
+            /* Icon container fixed width */
+            .kpi-card .card-body .d-flex.justify-content-between > i,
+            .card-body .d-flex.justify-content-between > i {
+                flex-shrink: 0;
             }
             
-            /* Card body h3 */
-            .card-body h3 {
-                font-size: 1.1rem;
-            }
-            
-            /* Sidebar logo smaller */
-            .sidebar-logo {
-                width: 60px;
-            }
-            
-            .sidebar-title {
-                font-size: 0.8rem;
-            }
-            
-            /* Nav links */
-            .sidebar .nav-link {
-                padding: 10px 15px;
-                font-size: 0.9rem;
-            }
-            
-            /* Modal header/footer */
-            .modal-header,
-            .modal-footer {
-                padding: 0.75rem 1rem;
-            }
-            
-            .modal-body {
-                padding: 1rem;
-            }
-            
-            /* Chart height */
-            .chart-container {
-                height: 200px !important;
-                min-height: 200px;
-            }
-            
-            /* Card footer */
-            .card-footer {
-                padding: 0.5rem 0.75rem;
+            /* Badge di bawah card */
+            .kpi-card .card-body > .badge,
+            .card-body > .badge {
+                display: block;
+                width: fit-content;
             }
         }
 
@@ -723,21 +763,36 @@
            ============================================ */
         @media (max-width: 375px) {
             .main-content-wrapper {
-                padding-left: 8px !important;
-                padding-right: 8px !important;
+                padding-left: 6px !important;
+                padding-right: 6px !important;
             }
             
             .card-body {
-                padding: 0.5rem;
+                padding: 8px 10px !important;
             }
             
-            .badge {
-                font-size: 0.55rem;
-                padding: 2px 4px;
+            .kpi-card h3,
+            .card-body h3 {
+                font-size: 1.15rem;
+            }
+            
+            .kpi-card .fa-2x,
+            .card-body .fa-2x {
+                font-size: 1.2rem !important;
+            }
+            
+            .chart-container {
+                height: 150px !important;
+                min-height: 150px;
             }
             
             .dashboard-section h1.h2 {
                 font-size: 1rem;
+            }
+            
+            .badge {
+                font-size: 0.5rem;
+                padding: 1px 4px;
             }
         }
 

@@ -3,26 +3,28 @@
         <button class="btn btn-outline-secondary me-3 sidebar-toggle-btn" type="button"><i class="fas fa-bars"></i></button>
         <h1 class="h2">Surat Keluar</h1>
     </div>
-    <div class="d-flex align-items-center mb-2 mb-md-0 gap-2" style="gap: 10px;">
-        <div class="input-group input-group-sm" style="width: 320px; height: 38px;">
+    <div class="d-flex flex-column flex-md-row align-items-stretch align-items-md-center gap-2 mt-2 mt-md-0" style="gap: 10px;">
+        <div class="input-group input-group-sm" style="width: 100%; max-width: 320px; height: 38px;">
             <input type="text" name="search" class="form-control" id="searchSuratKeluar" placeholder="Cari penerima, judul, perihal..." style="height: 38px;">
             <button class="btn btn-outline-secondary d-flex align-items-center justify-content-center" type="button" id="btnSearchSuratKeluar" style="height: 38px; width: 38px;"><i class="fas fa-search"></i></button>
         </div>
-        <select name="divisi_id" class="form-select form-select-sm" id="filterDivisiKeluar" style="width: 170px; height: 38px; padding: 0 0.75rem;">
-            <option value="">Semua Divisi</option>
-            @foreach($divisi as $d)
-                <option value="{{ $d->id }}">{{ $d->nama_divisi }}</option>
-            @endforeach
-        </select>
-        <select name="status" class="form-select form-select-sm" id="filterStatusKeluar" style="width: 170px; height: 38px; padding: 0 0.75rem;">
-            <option value="">Semua Status</option>
-            <option value="draft">Draft</option>
-            <option value="dikirim">Dikirim</option>
-            <option value="diterima">Diterima</option>
-        </select>
+        <div class="d-flex flex-column flex-md-row gap-2" style="gap: 10px;">
+            <select name="divisi_id" class="form-select form-select-sm" id="filterDivisiKeluar" style="width: 100%; height: 38px; padding: 0 0.75rem;">
+                <option value="">Semua Divisi</option>
+                @foreach($divisi as $d)
+                    <option value="{{ $d->id }}">{{ $d->nama_divisi }}</option>
+                @endforeach
+            </select>
+            <select name="status" class="form-select form-select-sm" id="filterStatusKeluar" style="width: 100%; height: 38px; padding: 0 0.75rem;">
+                <option value="">Semua Status</option>
+                <option value="draft">Draft</option>
+                <option value="dikirim">Dikirim</option>
+                <option value="diterima">Diterima</option>
+            </select>
+        </div>
     </div>
-    <div class="btn-toolbar mb-2 mb-md-0">
-        <button class="btn btn-success" id="btnSuratKeluarBaru" data-bs-toggle="modal" data-bs-target="#modalSuratKeluarBaru">
+    <div class="btn-toolbar w-100 mt-2 mt-md-0">
+        <button class="btn btn-success w-100" id="btnSuratKeluarBaru" data-bs-toggle="modal" data-bs-target="#modalSuratKeluarBaru">
             <i class="fas fa-plus me-1"></i> Buat Surat Keluar
         </button>
     </div>
@@ -198,12 +200,46 @@
 </div>
 
 <style>
-.email-item .email-actions {
-    opacity: 0;
-    transition: opacity 0.2s ease-in-out;
+/* Email actions - desktop hover only */
+@media (min-width: 768px) {
+    .email-item .email-actions {
+        opacity: 0;
+        transition: opacity 0.2s ease-in-out;
+    }
+    .email-item:hover .email-actions {
+        opacity: 1;
+    }
 }
-.email-item:hover .email-actions {
-    opacity: 1;
+
+/* Mobile: always show actions */
+@media (max-width: 767.98px) {
+    .email-item .email-actions {
+        opacity: 1 !important;
+    }
+    
+    .email-item .d-flex.w-100.align-items-center {
+        flex-direction: column !important;
+        align-items: flex-start !important;
+        gap: 12px;
+    }
+    
+    .email-item .ms-3 {
+        margin-left: 0 !important;
+        margin-top: 0;
+        align-self: flex-end;
+    }
+    
+    .email-item .email-date {
+        display: none;
+    }
+    
+    .email-subject {
+        font-size: 0.95rem;
+    }
+    
+    .email-preview {
+        font-size: 0.85rem;
+    }
 }
 </style>
 

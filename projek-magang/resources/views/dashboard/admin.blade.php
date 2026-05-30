@@ -234,7 +234,7 @@
                 <table class="table table-hover">
                     <thead>
                         <tr>
-                            <th>#</th>
+                            <th>No</th>
                             <th>Tanggal Terima</th>
                             <th>Pengirim</th>
                             <th>Instruksi Disposisi</th>

@@ -110,7 +110,7 @@
                             <td class="text-truncate" style="max-width:150px" title="{{ $item->instruksi_disposisi }}">{{ $item->instruksi_disposisi ?: '-' }}</td>
                             <td class="text-truncate" style="max-width:150px" title="{{ $item->instruksi_tambahan }}">{{ $item->instruksi_tambahan ?: '-' }}</td>
                             <td><span class="divisi-tag divisi-{{ $item->divisi_id ?? 0 }}">{{ $item->divisi->nama_divisi ?? $item->nama_divisi ?? 'N/A' }}</span></td>
-                            <td><i class="{{ getFileIconClass($item->format_file_id, 'fa-lg', $item->formatFile->nama_format ?? '') }}" title="{{ $item->formatFile->nama_format ?? 'File' }}"></i></td>
+                            <td><i class="{{ getFileIconClass($item->format_file_id, '', $item->formatFile->nama_format ?? '') }}" title="{{ $item->formatFile->nama_format ?? 'File' }}"></i></td>
                             <td>
                                 @switch($item->status)
                                     @case('baru') <span class="badge bg-warning">Baru</span> @break

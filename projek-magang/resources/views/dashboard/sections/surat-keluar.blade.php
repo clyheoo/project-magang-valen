@@ -1,17 +1,17 @@
-<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
-    <div class="d-flex align-items-center">
+<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom gap-3">
+    <div class="d-flex align-items-center flex-shrink-0">
         <button class="btn btn-outline-secondary me-3 sidebar-toggle-btn" type="button"><i class="fas fa-bars"></i></button>
-        <h1 class="h2">Surat Keluar</h1>
+        <h1 class="h2 mb-0">Surat Keluar</h1>
     </div>
     
     <!-- Search Bar -->
-    <div class="input-group input-group-sm mt-2 mt-md-0" style="height: 38px;">
+    <div class="input-group input-group-sm flex-grow-1" style="height: 38px;">
         <input type="text" name="search" class="form-control" id="searchSuratKeluar" placeholder="Cari penerima, judul, perihal..." style="height: 38px;">
         <button class="btn btn-outline-secondary d-flex align-items-center justify-content-center" type="button" id="btnSearchSuratKeluar" style="height: 38px; width: 38px;"><i class="fas fa-search"></i></button>
     </div>
     
-    <!-- Dropdowns & Tombol Aksi (Di satu baris) -->
-    <div class="d-flex align-items-stretch gap-2 mt-2 mt-md-0 w-100">
+    <!-- Dropdowns & Tombol Aksi -->
+    <div class="d-flex align-items-stretch gap-2 flex-grow-1">
         <select name="divisi_id" class="form-select form-select-sm flex-grow-1" id="filterDivisiKeluar" style="height: 38px;">
             <option value="">Semua Divisi</option>
             @foreach($divisi as $d)
@@ -29,7 +29,6 @@
         </button>
     </div>
 </div>
-
 <!-- Wrapper untuk konten yang akan di-refresh oleh AJAX -->
 <div id="suratKeluarContent">
     <div class="card shadow-sm">
